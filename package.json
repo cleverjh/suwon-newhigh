@@ -1,0 +1,16 @@
+{
+  "name": "suwon-newhigh",
+  "version": "1.0.0",
+  "private": true,
+  "description": "수원시 아파트 신고가 자동 집계 웹페이지 + 아파트너 자동 게시",
+  "scripts": {
+    "backfill": "node scripts/backfill.js",
+    "update": "node scripts/update.js",
+    "make-post": "node scripts/make-post.js",
+    "post-aptner": "node scripts/post-aptner.js",
+    "test": "node scripts/test.js"
+  },
+  "dependencies": {
+    "playwright": "^1.46.0"
+  }
+}

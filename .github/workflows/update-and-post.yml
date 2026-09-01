@@ -1,0 +1,89 @@
+name: 수원 신고가 갱신·아파트너 게시
+
+on:
+  schedule:
+    # 매주 월·목 08:30 KST (= 일·수 23:30 UTC)
+    - cron: '30 23 * * 0,3'
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: '과거 데이터 백필 실행 (최초 1회 필요)'
+        type: boolean
+        default: false
+      post:
+        description: '아파트너 게시 실행'
+        type: boolean
+        default: true
+      dry_run:
+        description: '아파트너 등록 버튼 직전까지만 실행(스크린샷 확인용)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      MOLIT_API_KEY: ${{ secrets.MOLIT_API_KEY }}
+      APTNER_ID: ${{ secrets.APTNER_ID }}
+      APTNER_PW: ${{ secrets.APTNER_PW }}
+      APTNER_WRITE_URL: ${{ secrets.APTNER_WRITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ── 최초 1회: 과거 실거래 전체 백필 ──────────────────────────
+      - name: 과거 데이터 백필
+        if: inputs.backfill == true
+        run: node scripts/backfill.js
+
+      # ── 정기: 최근 데이터 조회 + 신고가 탐지 + 리포트 생성 ──────
+      - name: 신고가 데이터 갱신
+        if: inputs.backfill != true
+        id: update
+        run: node scripts/update.js
+
+      - name: 데이터 변경사항 커밋
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data docs/data
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: 신고가 데이터 갱신 ($(TZ=Asia/Seoul date +%F))"
+            git push
+          fi
+
+      # ── 새 신고가가 있을 때만 게시글 생성 후 아파트너 게시 ───────
+      - name: 게시글 생성
+        if: steps.update.outputs.has_new == 'true' && inputs.post != false
+        run: node scripts/make-post.js
+
+      - name: Playwright 설치
+        if: steps.update.outputs.has_new == 'true' && inputs.post != false && env.APTNER_ID != ''
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+
+      - name: 아파트너 게시
+        if: steps.update.outputs.has_new == 'true' && inputs.post != false && env.APTNER_ID != ''
+        env:
+          DRY_RUN: ${{ inputs.dry_run == true && '1' || '' }}
+        run: node scripts/post-aptner.js
+
+      - name: 결과물 업로드 (게시글·스크린샷)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-output
+          path: out/
+          if-no-files-found: ignore
+          retention-days: 14

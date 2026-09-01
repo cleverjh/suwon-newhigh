@@ -1,0 +1,196 @@
+'use strict';
+
+/**
+ * 아파트너(aptner.com) 자동 게시 스크립트 (Playwright 사용)
+ *
+ * 아파트너는 공개 API가 없어 웹 자동화로 게시한다.
+ * 로그인 → 게시판 글쓰기 페이지 이동 → 제목/본문 입력 → 등록.
+ *
+ * 필수 환경변수
+ *   APTNER_ID        아파트너 로그인 아이디
+ *   APTNER_PW        아파트너 비밀번호
+ *   APTNER_WRITE_URL 글쓰기 페이지 URL (예: https://www.aptner.com/board/.../write)
+ *
+ * 선택 환경변수 (사이트 개편 시 셀렉터만 바꿔 대응)
+ *   APTNER_LOGIN_URL   기본 https://www.aptner.com/login
+ *   APTNER_SEL_ID      아이디 입력창 셀렉터
+ *   APTNER_SEL_PW      비밀번호 입력창 셀렉터
+ *   APTNER_SEL_LOGIN   로그인 버튼 셀렉터
+ *   APTNER_SEL_TITLE   제목 입력창 셀렉터
+ *   APTNER_SEL_BODY    본문 입력 영역 셀렉터
+ *   APTNER_SEL_SUBMIT  등록 버튼 셀렉터
+ *   DRY_RUN=1          등록 버튼을 누르기 직전까지만 실행(스크린샷 확인용)
+ *
+ * 실행 단계마다 out/shots/ 에 스크린샷을 남기므로,
+ * 셀렉터가 맞지 않아 실패하면 스크린샷을 보고 셀렉터 환경변수를 조정하면 된다.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { chromium } = require('playwright');
+const { PATHS } = require('./lib');
+
+const SHOTS = path.join(__dirname, '..', 'out', 'shots');
+
+const env = (k, d) => process.env[k] || d;
+
+async function shot(page, name) {
+  fs.mkdirSync(SHOTS, { recursive: true });
+  await page.screenshot({ path: path.join(SHOTS, `${name}.png`), fullPage: true });
+}
+
+/** 여러 후보 셀렉터 중 처음 보이는 요소를 반환 */
+async function firstVisible(page, selectors) {
+  for (const sel of selectors) {
+    try {
+      const loc = page.locator(sel).first();
+      if (await loc.isVisible({ timeout: 1500 })) return loc;
+    } catch {
+      /* 다음 후보 */
+    }
+  }
+  return null;
+}
+
+async function main() {
+  const id = process.env.APTNER_ID;
+  const pw = process.env.APTNER_PW;
+  const writeUrl = process.env.APTNER_WRITE_URL;
+  if (!id || !pw || !writeUrl) {
+    console.log('APTNER_ID / APTNER_PW / APTNER_WRITE_URL 미설정 → 아파트너 게시를 건너뜁니다.');
+    process.exit(0);
+  }
+
+  if (!fs.existsSync(PATHS.post)) {
+    console.log('out/post.md 가 없어(새 신고가 없음) 게시를 건너뜁니다.');
+    process.exit(0);
+  }
+  const postText = fs.readFileSync(PATHS.post, 'utf8');
+  const [title, ...rest] = postText.split('\n');
+  const body = rest.join('\n').trim();
+
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  page.setDefaultTimeout(20000);
+
+  try {
+    // 1) 로그인
+    await page.goto(env('APTNER_LOGIN_URL', 'https://www.aptner.com/login'), {
+      waitUntil: 'domcontentloaded',
+    });
+    await shot(page, '01-login-page');
+
+    const idInput = await firstVisible(page, [
+      env('APTNER_SEL_ID', ''),
+      'input[name="id"]',
+      'input[name="userId"]',
+      'input[name="loginId"]',
+      'input[type="email"]',
+      'input[placeholder*="아이디"]',
+      'input[type="text"]',
+    ].filter(Boolean));
+    const pwInput = await firstVisible(page, [
+      env('APTNER_SEL_PW', ''),
+      'input[name="password"]',
+      'input[name="pw"]',
+      'input[placeholder*="비밀번호"]',
+      'input[type="password"]',
+    ].filter(Boolean));
+    if (!idInput || !pwInput) throw new Error('로그인 입력창을 찾지 못했습니다. 스크린샷을 확인하고 APTNER_SEL_ID/PW를 설정하세요.');
+
+    await idInput.fill(id);
+    await pwInput.fill(pw);
+    await shot(page, '02-login-filled');
+
+    const loginBtn = await firstVisible(page, [
+      env('APTNER_SEL_LOGIN', ''),
+      'button[type="submit"]',
+      'button:has-text("로그인")',
+      'a:has-text("로그인")',
+      'input[type="submit"]',
+    ].filter(Boolean));
+    if (!loginBtn) throw new Error('로그인 버튼을 찾지 못했습니다. APTNER_SEL_LOGIN을 설정하세요.');
+    await loginBtn.click();
+    await page.waitForLoadState('networkidle').catch(() => {});
+    await shot(page, '03-after-login');
+
+    // 2) 글쓰기 페이지 이동
+    await page.goto(writeUrl, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle').catch(() => {});
+    await shot(page, '04-write-page');
+
+    // 3) 제목/본문 입력
+    const titleInput = await firstVisible(page, [
+      env('APTNER_SEL_TITLE', ''),
+      'input[name="title"]',
+      'input[placeholder*="제목"]',
+      'input[type="text"]',
+    ].filter(Boolean));
+    if (!titleInput) throw new Error('제목 입력창을 찾지 못했습니다. APTNER_SEL_TITLE을 설정하세요.');
+    await titleInput.fill(title);
+
+    const bodySel = env('APTNER_SEL_BODY', '');
+    let filledBody = false;
+    const bodyCandidates = [
+      bodySel,
+      'textarea[name="content"]',
+      'textarea',
+      'div[contenteditable="true"]',
+    ].filter(Boolean);
+    for (const sel of bodyCandidates) {
+      const loc = await firstVisible(page, [sel]);
+      if (!loc) continue;
+      const tag = await loc.evaluate((el) => el.tagName.toLowerCase());
+      if (tag === 'textarea' || tag === 'input') await loc.fill(body);
+      else {
+        await loc.click();
+        await loc.evaluate((el, text) => { el.innerText = text; }, body);
+      }
+      filledBody = true;
+      break;
+    }
+    // 에디터가 iframe(스마트에디터류)인 경우
+    if (!filledBody) {
+      for (const frame of page.frames()) {
+        try {
+          const editable = frame.locator('body[contenteditable="true"], div[contenteditable="true"]').first();
+          if (await editable.isVisible({ timeout: 1500 })) {
+            await editable.click();
+            await editable.evaluate((el, text) => { el.innerText = text; }, body);
+            filledBody = true;
+            break;
+          }
+        } catch { /* 다음 프레임 */ }
+      }
+    }
+    if (!filledBody) throw new Error('본문 입력 영역을 찾지 못했습니다. APTNER_SEL_BODY를 설정하세요.');
+    await shot(page, '05-form-filled');
+
+    // 4) 등록
+    if (process.env.DRY_RUN === '1') {
+      console.log('DRY_RUN=1 → 등록 버튼 클릭 없이 종료합니다. 05-form-filled.png 를 확인하세요.');
+      return;
+    }
+    const submitBtn = await firstVisible(page, [
+      env('APTNER_SEL_SUBMIT', ''),
+      'button:has-text("등록")',
+      'button:has-text("작성")',
+      'button:has-text("완료")',
+      'button[type="submit"]',
+    ].filter(Boolean));
+    if (!submitBtn) throw new Error('등록 버튼을 찾지 못했습니다. APTNER_SEL_SUBMIT을 설정하세요.');
+    await submitBtn.click();
+    await page.waitForLoadState('networkidle').catch(() => {});
+    await shot(page, '06-after-submit');
+    console.log('아파트너 게시 완료.');
+  } catch (err) {
+    await shot(page, '99-error').catch(() => {});
+    console.error('아파트너 게시 실패:', err.message);
+    console.error('out/shots/ 스크린샷을 확인해 셀렉터 환경변수를 조정하세요.');
+    process.exit(1);
+  } finally {
+    await browser.close();
+  }
+}
+
+main();

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수원 오늘의 신고가</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <p class="header-sub">국토부 실거래가 기준</p>
+        <h1 class="header-title">오늘의 신고가</h1>
+        <div class="header-row">
+            <span id="cityBadge" class="city-badge">수원 -건</span>
+            <span id="totalBadge" class="total-badge">총 -건</span>
+        </div>
+    </header>
+
+    <main class="board">
+        <div class="board-title">
+            <span class="pin">📍</span>
+            <strong>수원</strong>
+            <span id="countChip" class="count-chip">-건</span>
+            <span id="dateChip" class="date-chip"></span>
+        </div>
+
+        <div id="content">
+            <p class="loading">데이터를 불러오는 중...</p>
+        </div>
+
+        <footer class="notes">
+            <p><strong class="notes-label">신고가 기준</strong> 같은 단지 · 전용면적형(㎡ 정수 기준)별 역대 최고 거래</p>
+            <p>(신규)로 표시된 거래는 해당 면적형의 첫 거래입니다.</p>
+            <p>해제 신고된 거래는 제외하며, 신고 시점에 따라 결과가 추후 변경될 수 있습니다.</p>
+            <p>자료: 국토교통부 실거래가 공개시스템 · 매주 월·목 오전 자동 갱신</p>
+        </footer>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
