@@ -77,4 +77,35 @@ const picked = [
   .map((r) => r.areaType);
 assert.deepStrictEqual(picked, [84, 59, 128], '주력 평형(84/59)이 대형보다 먼저 뽑혀야 함');
 
-console.log('모든 테스트 통과 ✓');
+// 7) fetch 재시도: 일시적 실패 후 성공하면 결과를 돌려준다
+const { fetchWithRetry } = require('./lib');
+(async () => {
+  const realFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    if (calls === 1) throw new Error('fetch failed');      // 연결 실패
+    if (calls === 2) return { ok: false, status: 503 };     // 서버 일시 오류
+    return { ok: true, status: 200 };
+  };
+  const res = await fetchWithRetry('https://example.test', { retries: 3, baseDelayMs: 1 });
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(calls, 3, '두 번 실패 후 세 번째에 성공해야 함');
+
+  // 4xx는 재시도하지 않고 그대로 반환 (키 오류 등은 재시도해도 소용없음)
+  calls = 0;
+  globalThis.fetch = async () => { calls += 1; return { ok: false, status: 401 }; };
+  const bad = await fetchWithRetry('https://example.test', { retries: 3, baseDelayMs: 1 });
+  assert.strictEqual(bad.status, 401);
+  assert.strictEqual(calls, 1, '4xx는 재시도하지 않아야 함');
+
+  // 계속 실패하면 마지막 오류를 던진다
+  globalThis.fetch = async () => { throw new Error('fetch failed'); };
+  await assert.rejects(
+    fetchWithRetry('https://example.test', { retries: 2, baseDelayMs: 1 }),
+    /fetch failed/
+  );
+
+  globalThis.fetch = realFetch;
+  console.log('모든 테스트 통과 ✓');
+})();

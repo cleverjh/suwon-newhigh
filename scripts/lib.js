@@ -85,6 +85,35 @@ function xmlValue(block, tag) {
   return m ? m[1].trim() : '';
 }
 
+/**
+ * 재시도가 붙은 fetch.
+ * 공공데이터포털은 연결 자체가 끊기는 일시적 오류('fetch failed')와 5xx가 드물지 않고,
+ * 백필은 1,000회 가까이 호출하므로 한 번 실패로 전체가 멈추지 않도록 지수 백오프로 재시도한다.
+ */
+async function fetchWithRetry(url, { retries = 4, baseDelayMs = 1000, timeoutMs = 30000 } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    if (attempt > 0) {
+      const wait = baseDelayMs * 2 ** (attempt - 1);
+      console.log(`  재시도 ${attempt}/${retries} (${wait}ms 대기): ${lastErr.message}`);
+      await sleep(wait);
+    }
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+      // 5xx·429는 일시적일 수 있으므로 재시도, 4xx는 즉시 실패
+      if (res.status >= 500 || res.status === 429) {
+        lastErr = new Error(`HTTP ${res.status}`);
+        continue;
+      }
+      return res;
+    } catch (err) {
+      // 네트워크 오류·타임아웃 (fetch failed 등)
+      lastErr = new Error(err.cause ? `${err.message} (${err.cause.code || err.cause.message})` : err.message);
+    }
+  }
+  throw lastErr;
+}
+
 /** API 한 달치 호출 (페이지네이션 포함) → 거래 배열 */
 async function fetchMonth(serviceKey, lawdCd, dealYmd, { numOfRows = 1000 } = {}) {
   const all = [];
@@ -94,7 +123,7 @@ async function fetchMonth(serviceKey, lawdCd, dealYmd, { numOfRows = 1000 } = {}
       `${API_BASE}?serviceKey=${serviceKey}` +
       `&LAWD_CD=${lawdCd}&DEAL_YMD=${dealYmd}` +
       `&numOfRows=${numOfRows}&pageNo=${pageNo}`;
-    const res = await fetch(url);
+    const res = await fetchWithRetry(url);
     if (!res.ok) {
       throw new Error(`API HTTP ${res.status} (LAWD_CD=${lawdCd}, DEAL_YMD=${dealYmd})`);
     }
@@ -190,6 +219,7 @@ function sleep(ms) {
 
 module.exports = {
   DISTRICTS,
+  fetchWithRetry,
   API_BASE,
   PATHS,
   normName,
