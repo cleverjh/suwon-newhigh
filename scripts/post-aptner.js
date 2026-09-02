@@ -164,6 +164,19 @@ async function main() {
       }
     }
     if (!filledBody) throw new Error('본문 입력 영역을 찾지 못했습니다. APTNER_SEL_BODY를 설정하세요.');
+
+    // 이미지 카드 첨부 (out/post-image.png가 있으면)
+    const imgPath = path.join(__dirname, '..', 'out', 'post-image.png');
+    if (fs.existsSync(imgPath)) {
+      try {
+        const fileInput = page.locator(env('APTNER_SEL_FILE', 'input[type="file"]')).first();
+        await fileInput.setInputFiles(imgPath, { timeout: 8000 });
+        await page.waitForTimeout(3000); // 업로드 완료 대기
+        console.log('이미지 카드 첨부 완료.');
+      } catch {
+        console.warn('파일 첨부 입력을 찾지 못해 텍스트만 게시합니다. (APTNER_SEL_FILE 셀렉터로 지정 가능)');
+      }
+    }
     await shot(page, '05-form-filled');
 
     // 4) 등록

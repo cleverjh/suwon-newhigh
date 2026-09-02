@@ -149,6 +149,11 @@ function render(report) {
 }
 
 async function load() {
+    // 이미지 렌더링 모드: 데이터가 직접 주입된 경우 fetch 없이 렌더
+    if (window.__REPORT__) {
+        render(window.__REPORT__);
+        return;
+    }
     const useSample = new URLSearchParams(location.search).has('sample');
     const url = useSample ? 'data/sample-report.json' : 'data/report.json';
     try {
