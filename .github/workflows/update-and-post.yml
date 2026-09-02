@@ -86,9 +86,18 @@ jobs:
           git add data docs/data
           if ! git diff --cached --quiet; then
             git commit -m "chore: 신고가 데이터 갱신 ($(TZ=Asia/Seoul date +%F))"
-            # 실행 중에 main이 앞서 나갔을 수 있으므로 리베이스 후 푸시
-            git pull --rebase origin "$GITHUB_REF_NAME" || true
-            git push origin "HEAD:$GITHUB_REF_NAME"
+            # 실행 중에 main이 앞서 나갔을 수 있으므로 리베이스 후 푸시 (최대 3회 재시도).
+            # 백필은 15분 넘게 걸리므로, 한 번의 푸시 거부로 결과를 잃지 않도록 한다.
+            for i in 1 2 3; do
+              if git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME"; then
+                echo "푸시 성공 (시도 $i)"
+                exit 0
+              fi
+              echo "푸시 실패, 재시도 $i/3"
+              sleep 5
+            done
+            echo "::error::데이터 푸시에 실패했습니다. 아티팩트(data-backup)에서 복구하세요."
+            exit 1
           fi
 
       # ── 새 신고가가 있을 때만 게시글 생성 후 아파트너 게시 ───────
@@ -111,6 +120,18 @@ jobs:
         env:
           DRY_RUN: ${{ inputs.dry_run == true && '1' || '' }}
         run: node scripts/post-aptner.js
+
+      # 푸시가 실패해도 수집한 데이터를 잃지 않도록 항상 백업해 둔다
+      - name: 데이터 백업 업로드
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: data-backup
+          path: |
+            data/
+            docs/data/
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: 결과물 업로드 (게시글·스크린샷)
         if: always()
