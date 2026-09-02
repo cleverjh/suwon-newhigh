@@ -71,6 +71,8 @@ jobs:
 
       - name: 과거 데이터 백필
         if: inputs.backfill == true
+        id: backfill
+        continue-on-error: true   # 중단되어도 진행분을 커밋해야 다음 실행에서 이어갈 수 있음
         run: node scripts/backfill.js
 
       # ── 정기: 최근 데이터 조회 + 신고가 탐지 + 리포트 생성 ──────
@@ -80,6 +82,7 @@ jobs:
         run: node scripts/update.js
 
       - name: 데이터 변경사항 커밋
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -120,6 +123,19 @@ jobs:
         env:
           DRY_RUN: ${{ inputs.dry_run == true && '1' || '' }}
         run: node scripts/post-aptner.js
+
+      - name: 백필 미완료 알림
+        if: inputs.backfill == true && steps.backfill.outcome == 'failure'
+        run: |
+          {
+            echo ""
+            echo "### ⚠️ 백필이 끝까지 진행되지 못했습니다"
+            echo ""
+            echo "여기까지의 진행 상황은 저장·커밋되었습니다."
+            echo "**[backfill]만 체크하고 [reset]은 체크하지 말고** 다시 실행하면 남은 구간부터 이어서 진행합니다."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::백필 미완료 — [reset] 없이 [backfill]만 체크해 다시 실행하세요."
+          exit 1
 
       # 푸시가 실패해도 수집한 데이터를 잃지 않도록 항상 백업해 둔다
       - name: 데이터 백업 업로드

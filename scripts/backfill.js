@@ -79,6 +79,9 @@ async function main() {
   };
 
   let calls = 0;
+  let consecutiveFailures = 0;
+  const failedJobs = [];
+  const MAX_CONSECUTIVE_FAILURES = parseInt(process.env.MAX_CONSECUTIVE_FAILURES || '5', 10);
   for (const d of DISTRICTS) {
     for (const ym of months) {
       const jobKey = `${d.code}-${ym}`;
@@ -87,11 +90,24 @@ async function main() {
       let rows;
       try {
         rows = await fetchMonth(serviceKey, d.code, ym);
+        consecutiveFailures = 0;
       } catch (err) {
-        // 진행 상황 저장 후 종료 → 다음 실행 때 이어서
-        saveAll();
-        console.error(`${d.name} ${ym} 조회 실패, 진행 상황 저장 후 중단:`, err.message);
-        process.exit(2);
+        // 한 구간 실패로 전체를 포기하지 않는다. 해당 구간은 done에 넣지 않으므로
+        // 다음 실행에서 다시 시도되고, 나머지 구간은 계속 진행한다.
+        consecutiveFailures += 1;
+        failedJobs.push(`${d.name} ${ym}`);
+        console.warn(`${d.name} ${ym} 조회 실패(${consecutiveFailures}회 연속): ${err.message}`);
+        if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+          saveAll();
+          console.error(
+            `연속 ${consecutiveFailures}회 실패로 중단합니다. API 서버에 연결할 수 없는 상태로 보입니다.\n` +
+              `진행 상황은 저장했으니, 잠시 후 [backfill]만 체크해 다시 실행하면 이어서 진행합니다.\n` +
+              `완료 ${doneSet.size}/${months.length * DISTRICTS.length} 구간`
+          );
+          process.exit(2);
+        }
+        await sleep(delayMs * 4);
+        continue;
       }
 
       for (const t of rows) {
@@ -128,6 +144,14 @@ async function main() {
 
   saveAll();
   console.log(`백필 완료: 최고가 DB ${Object.keys(maxDb).length}개 (단지·면적형), 우리 아파트 거래 ${ourTrades.trades.length}건`);
+  if (failedJobs.length > 0) {
+    console.warn(
+      `조회하지 못한 구간 ${failedJobs.length}개: ${failedJobs.slice(0, 10).join(', ')}` +
+        `${failedJobs.length > 10 ? ' 외' : ''}\n` +
+        `[backfill]만 체크해 다시 실행하면 이 구간들만 재시도합니다.`
+    );
+    process.exit(3); // 부분 완료 — 데이터는 저장됨
+  }
 }
 
 main().catch((err) => {
