@@ -54,4 +54,27 @@ assert.strictEqual(t.amountMan - prev.max, 10000); // ▲1억
 const first = parseItem(itemXml.replace('광교호반베르디움', '신규단지'), '41117');
 assert.strictEqual(maxDb[tradeKey(first)], undefined, '첫 거래는 DB에 없어야 함');
 
+// 5) 면적 표시 포맷 (소수점 2자리, 불필요한 0 제거)
+const fmtArea = (a) => {
+  const s = Number(a).toFixed(2);
+  return s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s;
+};
+assert.strictEqual(fmtArea(104.9868), '104.99');
+assert.strictEqual(fmtArea(84.8641), '84.86');
+assert.strictEqual(fmtArea(84.9), '84.9');
+assert.strictEqual(fmtArea(100), '100'); // 정수 면적이 "1"로 잘리지 않아야 함
+assert.strictEqual(fmtArea(84), '84');
+
+// 6) 인근 단지 면적형 우선순위 (우리 아파트 주력 평형에 가까운 순)
+const compareTypes = [59, 84];
+const typeDistance = (at) => Math.min(...compareTypes.map((t) => Math.abs(at - t)));
+const picked = [
+  { areaType: 157, max: 99100 }, { areaType: 128, max: 95000 },
+  { areaType: 84, max: 70000 }, { areaType: 59, max: 50000 },
+]
+  .sort((a, b) => typeDistance(a.areaType) - typeDistance(b.areaType) || b.max - a.max)
+  .slice(0, 3)
+  .map((r) => r.areaType);
+assert.deepStrictEqual(picked, [84, 59, 128], '주력 평형(84/59)이 대형보다 먼저 뽑혀야 함');
+
 console.log('모든 테스트 통과 ✓');

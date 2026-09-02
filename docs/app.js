@@ -18,6 +18,12 @@ function formatMan(man) {
     return s || '0';
 }
 
+// 면적은 소수점 2자리까지만 (API가 104.9868 같은 값을 주는 경우가 있음)
+function fmtArea(a) {
+    const s = Number(a).toFixed(2);
+    return s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s;
+}
+
 function fmtDate(d) {
     const [y, m, day] = d.split('-');
     return `${y.slice(2)}.${m}.${day}`;
@@ -46,7 +52,7 @@ function renderOurApt(report) {
     if (o.recent && o.recent.length > 0) {
         for (const t of o.recent) {
             const row = el('div', 'mini-row');
-            row.appendChild(el('span', 'mini-label', `${t.area}㎡ / ${t.floor}층`));
+            row.appendChild(el('span', 'mini-label', `${fmtArea(t.area)}㎡ / ${t.floor}층`));
             row.appendChild(el('span', 'mini-price', formatMan(t.amountMan)));
             row.appendChild(el('span', 'mini-date', `${fmtDate(t.date)} 계약`));
             body.appendChild(row);
@@ -59,7 +65,7 @@ function renderOurApt(report) {
     if (o.records && o.records.length > 0) {
         for (const r of o.records) {
             const row = el('div', 'mini-row');
-            row.appendChild(el('span', 'mini-label', `${r.areaType}형 (${r.area}㎡/${r.floor}층)`));
+            row.appendChild(el('span', 'mini-label', `${r.areaType}형 (${fmtArea(r.area)}㎡/${r.floor}층)`));
             row.appendChild(el('span', 'mini-price strong', formatMan(r.max)));
             row.appendChild(el('span', 'mini-date', `${fmtDate(r.date)} 계약`));
             body.appendChild(row);
@@ -85,7 +91,7 @@ function renderNeighbors(report) {
         wrap.appendChild(el('div', 'neighbor-name', n.apt));
         for (const r of n.records) {
             const row = el('div', 'mini-row');
-            row.appendChild(el('span', 'mini-label', `${r.areaType}형 (${r.area}㎡/${r.floor}층)`));
+            row.appendChild(el('span', 'mini-label', `${r.areaType}형 (${fmtArea(r.area)}㎡/${r.floor}층)`));
             row.appendChild(el('span', 'mini-price', formatMan(r.max)));
             row.appendChild(el('span', 'mini-date', `${fmtDate(r.date)} 계약`));
             wrap.appendChild(row);
@@ -109,7 +115,7 @@ function renderRow(item, rank) {
     main.appendChild(top);
 
     main.appendChild(el('div', 'trade-meta',
-        `${item.umd} · ${item.area}㎡ / ${item.floor}층 · ${fmtDate(item.date)} 계약`));
+        `${item.umd} · ${fmtArea(item.area)}㎡ / ${item.floor}층 · ${fmtDate(item.date)} 계약`));
 
     row.appendChild(main);
     return row;

@@ -1,78 +1,290 @@
 {
  "city": "수원",
- "generatedAt": "샘플 데이터",
+ "generatedAt": "2026-09-02",
  "rangeDays": 14,
- "totalCount": 14,
+ "totalCount": 0,
  "ourApt": {
   "name": "수원SK스카이뷰",
   "umd": "정자동",
   "districtName": "장안구",
   "recent": [
-   { "date": "2026-08-24", "amountMan": 65000, "area": 84.98, "areaType": 84, "floor": 15 },
-   { "date": "2026-08-18", "amountMan": 50000, "area": 59.96, "areaType": 59, "floor": 7 },
-   { "date": "2026-08-10", "amountMan": 62500, "area": 84.86, "areaType": 84, "floor": 3 }
+   {
+    "date": "2026-08-27",
+    "amountMan": 71000,
+    "area": 59.961,
+    "areaType": 59,
+    "floor": 21
+   },
+   {
+    "date": "2026-08-14",
+    "amountMan": 87000,
+    "area": 84.893,
+    "areaType": 84,
+    "floor": 29
+   },
+   {
+    "date": "2026-08-08",
+    "amountMan": 67000,
+    "area": 59.929,
+    "areaType": 59,
+    "floor": 1
+   }
   ],
   "records": [
-   { "areaType": 59, "max": 59000, "date": "2021-09-11", "area": 59.96, "floor": 18 },
-   { "areaType": 84, "max": 79000, "date": "2021-08-21", "area": 84.98, "floor": 21 },
-   { "areaType": 98, "max": 85000, "date": "2021-10-02", "area": 98.31, "floor": 14 },
-   { "areaType": 111, "max": 92000, "date": "2021-07-30", "area": 111.79, "floor": 22 }
+   {
+    "areaType": 59,
+    "max": 76000,
+    "date": "2026-07-21",
+    "area": 59.952,
+    "floor": 31
+   },
+   {
+    "areaType": 84,
+    "max": 100000,
+    "date": "2021-10-11",
+    "area": 84.957,
+    "floor": 10
+   },
+   {
+    "areaType": 97,
+    "max": 105800,
+    "date": "2021-11-20",
+    "area": 97.791,
+    "floor": 20
+   },
+   {
+    "areaType": 110,
+    "max": 111000,
+    "date": "2021-07-28",
+    "area": 110.472,
+    "floor": 2
+   },
+   {
+    "areaType": 122,
+    "max": 120000,
+    "date": "2021-07-26",
+    "area": 122.689,
+    "floor": 6
+   },
+   {
+    "areaType": 129,
+    "max": 131500,
+    "date": "2021-09-23",
+    "area": 129.731,
+    "floor": 34
+   },
+   {
+    "areaType": 134,
+    "max": 107500,
+    "date": "2024-05-10",
+    "area": 134.099,
+    "floor": 2
+   },
+   {
+    "areaType": 135,
+    "max": 103500,
+    "date": "2026-04-13",
+    "area": 135.353,
+    "floor": 3
+   },
+   {
+    "areaType": 141,
+    "max": 117000,
+    "date": "2024-10-30",
+    "area": 141.563,
+    "floor": 2
+   }
   ]
  },
  "neighbors": [
   {
+   "apt": "화서역푸르지오브리시엘",
+   "umd": "정자동",
+   "records": [
+    {
+     "areaType": 84,
+     "max": 153000,
+     "date": "2026-06-30",
+     "area": 84.8641,
+     "floor": 39
+    },
+    {
+     "areaType": 104,
+     "max": 170000,
+     "date": "2026-08-04",
+     "area": 104.9868,
+     "floor": 30
+    }
+   ]
+  },
+  {
    "apt": "화서역파크푸르지오",
    "umd": "정자동",
    "records": [
-    { "areaType": 84, "max": 105000, "date": "2026-05-12", "area": 84.83, "floor": 25 },
-    { "areaType": 59, "max": 78000, "date": "2026-03-20", "area": 59.94, "floor": 17 }
+    {
+     "areaType": 59,
+     "max": 127000,
+     "date": "2026-08-16",
+     "area": 59.78,
+     "floor": 14
+    },
+    {
+     "areaType": 74,
+     "max": 132000,
+     "date": "2026-07-23",
+     "area": 74.96,
+     "floor": 11
+    },
+    {
+     "areaType": 84,
+     "max": 150000,
+     "date": "2026-06-21",
+     "area": 84.7,
+     "floor": 35
+    }
    ]
   },
   {
-   "apt": "동신3차",
+   "apt": "북수원자이렉스비아",
    "umd": "정자동",
    "records": [
-    { "areaType": 84, "max": 49000, "date": "2025-10-02", "area": 84.6, "floor": 9 },
-    { "areaType": 59, "max": 39000, "date": "2026-01-15", "area": 59.76, "floor": 12 }
+    {
+     "areaType": 59,
+     "max": 82250,
+     "date": "2026-08-04",
+     "area": 59.84,
+     "floor": 11
+    },
+    {
+     "areaType": 74,
+     "max": 96000,
+     "date": "2026-07-18",
+     "area": 74.56,
+     "floor": 17
+    },
+    {
+     "areaType": 84,
+     "max": 110000,
+     "date": "2026-09-01",
+     "area": 84.35,
+     "floor": 21
+    }
    ]
   },
   {
-   "apt": "백설마을풍림",
+   "apt": "청솔마을SK한화",
    "umd": "정자동",
    "records": [
-    { "areaType": 59, "max": 42000, "date": "2025-12-28", "area": 59.88, "floor": 11 }
+    {
+     "areaType": 99,
+     "max": 87000,
+     "date": "2021-08-25",
+     "area": 99.2153,
+     "floor": 9
+    },
+    {
+     "areaType": 128,
+     "max": 95000,
+     "date": "2021-08-12",
+     "area": 128.1836,
+     "floor": 12
+    },
+    {
+     "areaType": 157,
+     "max": 99100,
+     "date": "2021-08-11",
+     "area": 157.439,
+     "floor": 14
+    }
+   ]
+  },
+  {
+   "apt": "정자KTe-편한세상",
+   "umd": "정자동",
+   "records": [
+    {
+     "areaType": 84,
+     "max": 74500,
+     "date": "2021-09-14",
+     "area": 84.76,
+     "floor": 15
+    },
+    {
+     "areaType": 128,
+     "max": 87000,
+     "date": "2021-06-16",
+     "area": 128.86,
+     "floor": 15
+    },
+    {
+     "areaType": 140,
+     "max": 97500,
+     "date": "2021-11-05",
+     "area": 140.72,
+     "floor": 11
+    }
+   ]
+  },
+  {
+   "apt": "백설마을성지동양고속아파트",
+   "umd": "정자동",
+   "records": [
+    {
+     "areaType": 99,
+     "max": 81500,
+     "date": "2021-08-21",
+     "area": 99.89,
+     "floor": 17
+    },
+    {
+     "areaType": 135,
+     "max": 96000,
+     "date": "2021-11-12",
+     "area": 135.63,
+     "floor": 9
+    }
+   ]
+  },
+  {
+   "apt": "연꽃마을풍림",
+   "umd": "정자동",
+   "records": [
+    {
+     "areaType": 99,
+     "max": 77000,
+     "date": "2021-10-27",
+     "area": 99.18,
+     "floor": 20
+    },
+    {
+     "areaType": 127,
+     "max": 90000,
+     "date": "2021-10-22",
+     "area": 127.17,
+     "floor": 12
+    }
+   ]
+  },
+  {
+   "apt": "두견마을벽산3차",
+   "umd": "정자동",
+   "records": [
+    {
+     "areaType": 99,
+     "max": 72500,
+     "date": "2021-07-15",
+     "area": 99.95,
+     "floor": 18
+    },
+    {
+     "areaType": 134,
+     "max": 85000,
+     "date": "2021-12-03",
+     "area": 134.86,
+     "floor": 11
+    }
    ]
   }
  ],
- "districts": [
-  {
-   "name": "영통구",
-   "items": [
-    { "apt": "광교호반베르디움", "umd": "원천동", "amountMan": 150000, "diffMan": 10000, "area": 84.94, "floor": 16, "date": "2026-08-21" },
-    { "apt": "영통롯데캐슬엘클래스2단지", "umd": "망포동", "amountMan": 103000, "diffMan": 9000, "area": 84.98, "floor": 11, "date": "2026-08-29" },
-    { "apt": "그대가프리미어", "umd": "망포동", "amountMan": 100000, "diffMan": null, "area": 59.95, "floor": 14, "date": "2026-08-20" },
-    { "apt": "매탄위브하늘채", "umd": "매탄동", "amountMan": 87500, "diffMan": null, "area": 84.78, "floor": 8, "date": "2026-08-19" },
-    { "apt": "영통라온프라이빗", "umd": "영통동", "amountMan": 83000, "diffMan": 3500, "area": 59.83, "floor": 19, "date": "2026-08-28" },
-    { "apt": "극동", "umd": "매탄동", "amountMan": 40900, "diffMan": 900, "area": 59.93, "floor": 9, "date": "2026-08-28" }
-   ]
-  },
-  {
-   "name": "팔달구",
-   "items": [
-    { "apt": "수원센트럴아이파크자이", "umd": "인계동", "amountMan": 99000, "diffMan": null, "area": 84.99, "floor": 9, "date": "2026-08-22" },
-    { "apt": "동도센트리움", "umd": "우만동", "amountMan": 55500, "diffMan": 500, "area": 84.92, "floor": 3, "date": "2026-08-07" }
-   ]
-  },
-  {
-   "name": "권선구",
-   "items": [
-    { "apt": "수원하늘채더퍼스트1단지", "umd": "곡반정동", "amountMan": 89000, "diffMan": 1000, "area": 84.96, "floor": 11, "date": "2026-08-28" },
-    { "apt": "수원하늘채더퍼스트1단지", "umd": "곡반정동", "amountMan": 75000, "diffMan": 2000, "area": 59.96, "floor": 9, "date": "2026-08-30" },
-    { "apt": "수원아이파크시티6단지", "umd": "권선동", "amountMan": 72500, "diffMan": 2000, "area": 101.91, "floor": 12, "date": "2026-08-29" },
-    { "apt": "매탄권선역리버파크", "umd": "권선동", "amountMan": 60000, "diffMan": 2000, "area": 59.81, "floor": 13, "date": "2026-08-28" },
-    { "apt": "매탄권선역리버파크", "umd": "권선동", "amountMan": 50000, "diffMan": 4500, "area": 49.58, "floor": 12, "date": "2026-08-29" },
-    { "apt": "신우", "umd": "권선동", "amountMan": 43000, "diffMan": 1000, "area": 74.61, "floor": 5, "date": "2026-08-25" }
-   ]
-  }
- ]
+ "districts": []
 }

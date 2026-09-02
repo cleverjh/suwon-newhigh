@@ -24,6 +24,11 @@ const [, mm, dd] = dateStr.split('-');
 const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 const dow = dayNames[new Date(`${dateStr}T00:00:00Z`).getUTCDay()];
 
+const fmtArea = (a) => {
+  const s = Number(a).toFixed(2);
+  return s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s;
+};
+
 const fmtDate = (d) => {
   const [y, m, day] = d.split('-');
   return `${y.slice(2)}.${Number(m)}.${Number(day)}`;
@@ -43,7 +48,7 @@ if (report.ourApt) {
   lines.push('[최근 거래]');
   if (o.recent && o.recent.length > 0) {
     for (const t of o.recent) {
-      lines.push(`· ${formatMan(t.amountMan)} (${t.area}㎡/${t.floor}층) ${fmtDate(t.date)} 계약`);
+      lines.push(`· ${formatMan(t.amountMan)} (${fmtArea(t.area)}㎡/${t.floor}층) ${fmtDate(t.date)} 계약`);
     }
   } else {
     lines.push('· 최근 거래 없음');
@@ -51,7 +56,7 @@ if (report.ourApt) {
   lines.push('[신고가 · 역대 최고]');
   if (o.records && o.records.length > 0) {
     for (const r of o.records) {
-      lines.push(`· ${r.areaType}형 ${formatMan(r.max)} (${r.area}㎡/${r.floor}층) ${fmtDate(r.date)} 계약`);
+      lines.push(`· ${r.areaType}형 ${formatMan(r.max)} (${fmtArea(r.area)}㎡/${r.floor}층) ${fmtDate(r.date)} 계약`);
     }
   } else {
     lines.push('· 데이터 없음');
@@ -83,7 +88,7 @@ if (report.totalCount === 0) {
       const diff = it.diffMan == null ? '신규' : `▲${formatMan(it.diffMan)}`;
       lines.push(
         `· ${it.apt} (${it.umd}) ${formatMan(it.amountMan)} (${diff}) ` +
-          `${it.area}㎡/${it.floor}층, ${fmtDate(it.date)} 계약`
+          `${fmtArea(it.area)}㎡/${it.floor}층, ${fmtDate(it.date)} 계약`
       );
     }
   }

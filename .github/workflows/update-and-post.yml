@@ -35,11 +35,11 @@ jobs:
       APTNER_PW: ${{ secrets.APTNER_PW }}
       APTNER_WRITE_URL: ${{ secrets.APTNER_WRITE_URL }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
 
       # ── 최초 1회: 과거 실거래 전체 백필 ──────────────────────────
       - name: 과거 데이터 백필
@@ -85,7 +85,7 @@ jobs:
 
       - name: 결과물 업로드 (게시글·스크린샷)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: run-output
           path: out/

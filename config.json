@@ -12,5 +12,6 @@
     "maxComplexes": 8,
     "maxTypesPerComplex": 3
   },
+  "compareAreaTypes": [59, 84],
   "ourRecentTradeCount": 3
 }

@@ -180,12 +180,27 @@ async function main() {
     if (!byComplex.has(k)) byComplex.set(k, { apt: r.apt, umd: r.umd || '', records: [] });
     byComplex.get(k).records.push({ areaType: r.areaType, max: r.max, date: r.date, area: r.area, floor: r.floor });
   }
+  // 우리 아파트 주력 면적형(compareAreaTypes)과 가까운 순으로 노출해야 비교가 된다.
+  // 대형 평형만 뽑히면 59·84형 위주인 우리 아파트와 견줄 수 없기 때문.
+  const compareTypes = cfg.compareAreaTypes || [];
+  const typeDistance = (areaType) =>
+    compareTypes.length === 0
+      ? 0
+      : Math.min(...compareTypes.map((t) => Math.abs(areaType - t)));
+
   const neighbors = [...byComplex.values()]
     .map((c) => ({
       ...c,
-      records: c.records.sort((a, b) => b.max - a.max).slice(0, cfg.neighbors.maxTypesPerComplex || 3),
+      records: c.records
+        .sort((a, b) => typeDistance(a.areaType) - typeDistance(b.areaType) || b.max - a.max)
+        .slice(0, cfg.neighbors.maxTypesPerComplex || 3)
+        .sort((a, b) => a.areaType - b.areaType),
     }))
-    .sort((a, b) => b.records[0].max - a.records[0].max)
+    // 단지 정렬도 비교 대상 면적형의 가격 기준으로
+    .sort((a, b) => {
+      const price = (c) => Math.max(...c.records.map((r) => r.max));
+      return price(b) - price(a);
+    })
     .slice(0, cfg.neighbors.maxComplexes || 8);
 
   const total = events.length;
