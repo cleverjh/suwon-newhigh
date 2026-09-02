@@ -25,11 +25,21 @@ body {
 .header { padding: 8px 6px 18px; }
 .header-sub { font-size: 13px; color: var(--gray); font-weight: 600; }
 .header-title {
-    font-size: 44px;
-    font-weight: 900;
-    letter-spacing: -1px;
     color: var(--navy);
-    line-height: 1.15;
+    line-height: 1.1;
+}
+.title-apt {
+    display: block;
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    color: var(--red);
+}
+.title-main {
+    display: block;
+    font-size: 40px;
+    font-weight: 900;
+    letter-spacing: -1.2px;
 }
 .header-row {
     display: flex;
@@ -111,6 +121,33 @@ body {
 .mini-price.strong { font-size: 17px; }
 .mini-date { flex: none; width: 84px; text-align: right; font-size: 11.5px; color: var(--gray); }
 .mini-empty { padding: 8px 10px; font-size: 13px; color: var(--gray); }
+
+/* 최근 거래 아래 같은 면적형 인근 단지 비교 줄 */
+.compare-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px 10px 10px;
+    border-bottom: 1px solid var(--line);
+}
+.compare-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray);
+    flex: none;
+}
+.compare-chip {
+    font-size: 11.5px;
+    background: #f1ece3;
+    border-radius: 5px;
+    padding: 3px 7px;
+    color: #6b6355;
+    white-space: nowrap;
+}
+.compare-chip b { color: var(--navy); font-weight: 800; }
+.compare-chip.ours { background: var(--red-soft); color: #a8433f; }
+.compare-chip.ours b { color: var(--red); }
 .neighbor { padding: 4px 0 2px; border-bottom: 1px solid var(--line); }
 .neighbor:last-child { border-bottom: none; }
 .neighbor-name {
@@ -209,6 +246,7 @@ body {
 .notes-label { color: var(--red); margin-right: 6px; }
 
 @media (max-width: 420px) {
-    .header-title { font-size: 36px; }
+    .title-main { font-size: 32px; }
+    .title-apt { font-size: 21px; }
     .price { font-size: 17px; }
 }

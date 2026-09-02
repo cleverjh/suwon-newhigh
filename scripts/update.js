@@ -157,16 +157,6 @@ async function main() {
     .sort((a, b) => a.areaType - b.areaType)
     .map((r) => ({ areaType: r.areaType, max: r.max, date: r.date, area: r.area, floor: r.floor }));
 
-  const ourApt = {
-    name: cfg.ourApt.name,
-    umd: cfg.ourApt.umd,
-    districtName: cfg.ourApt.districtName,
-    recent: [...ourTrades.trades]
-      .sort((a, b) => (a.date > b.date ? -1 : 1))
-      .slice(0, cfg.ourRecentTradeCount || 3),
-    records: ourRecords,
-  };
-
   // 5) 인근 단지 섹션: 같은 법정동(+extra 지정 단지)의 면적형별 역대 최고가
   const extra = (cfg.neighbors.extra || []).map(normName);
   const neighborEntries = dbRecords(maxDb).filter((r) => {
@@ -174,6 +164,38 @@ async function main() {
     const sameUmd = r.lawdCd === cfg.ourApt.lawdCd && r.umd === cfg.ourApt.umd;
     return sameUmd || extra.includes(normName(r.apt));
   });
+
+  // 면적형별 인근 단지 최고가 색인 (우리 아파트 최근 거래와 같은 평형끼리 비교하기 위함)
+  const neighborByType = new Map();
+  for (const r of neighborEntries) {
+    if (!neighborByType.has(r.areaType)) neighborByType.set(r.areaType, []);
+    neighborByType.get(r.areaType).push({ apt: r.apt, max: r.max, date: r.date });
+  }
+  const compareCount = cfg.neighbors.compareCount || 2;
+  const sameTypeNeighbors = (areaType) =>
+    (neighborByType.get(areaType) || []).sort((a, b) => b.max - a.max).slice(0, compareCount);
+
+  const ourMaxByType = new Map(ourRecords.map((r) => [r.areaType, r]));
+
+  const ourApt = {
+    name: cfg.ourApt.name,
+    umd: cfg.ourApt.umd,
+    districtName: cfg.ourApt.districtName,
+    recent: [...ourTrades.trades]
+      .sort((a, b) => (a.date > b.date ? -1 : 1))
+      .slice(0, cfg.ourRecentTradeCount || 3)
+      .map((t) => {
+        const ourMax = ourMaxByType.get(t.areaType);
+        return {
+          ...t,
+          // 같은 면적형의 우리 단지 최고가 대비 차이 (음수면 최고가에 못 미침)
+          vsOurMaxMan: ourMax ? t.amountMan - ourMax.max : null,
+          // 같은 면적형 인근 단지 최고가 (비교용)
+          neighbors: sameTypeNeighbors(t.areaType),
+        };
+      }),
+    records: ourRecords,
+  };
   const byComplex = new Map();
   for (const r of neighborEntries) {
     const k = `${r.lawdCd}|${r.apt}`;

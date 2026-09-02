@@ -36,7 +36,7 @@ const fmtDate = (d) => {
 
 const lines = [];
 const ourName = report.ourApt ? report.ourApt.name : '우리 아파트';
-lines.push(`🔥 ${Number(mm)}/${Number(dd)}(${dow}) ${ourName}·수원 신고가 브리핑`);
+lines.push(`🔥 ${Number(mm)}/${Number(dd)}(${dow}) ${ourName} 신고가 브리핑`);
 lines.push('');
 lines.push('국토교통부 실거래가 공개시스템 기준입니다.');
 lines.push('');
@@ -45,15 +45,24 @@ lines.push('');
 if (report.ourApt) {
   const o = report.ourApt;
   lines.push(`🏠 우리 아파트 (${o.name})`);
-  lines.push('[최근 거래]');
+  lines.push('[최근 거래 · 같은 평형 비교]');
   if (o.recent && o.recent.length > 0) {
     for (const t of o.recent) {
-      lines.push(`· ${formatMan(t.amountMan)} (${fmtArea(t.area)}㎡/${t.floor}층) ${fmtDate(t.date)} 계약`);
+      lines.push(
+        `· ${t.areaType}형 ${formatMan(t.amountMan)} (${fmtArea(t.area)}㎡/${t.floor}층) ${fmtDate(t.date)} 계약`
+      );
+      const ourMax = (o.records || []).find((r) => r.areaType === t.areaType);
+      const parts = [];
+      if (ourMax) parts.push(`우리 ${formatMan(ourMax.max)}`);
+      for (const n of t.neighbors || []) parts.push(`${n.apt} ${formatMan(n.max)}`);
+      if (parts.length > 0) {
+        lines.push(`   └ ${t.areaType}형 최고가: ${parts.join(' / ')}`);
+      }
     }
   } else {
     lines.push('· 최근 거래 없음');
   }
-  lines.push('[신고가 · 역대 최고]');
+  lines.push('[우리 단지 면적형별 신고가 · 역대 최고]');
   if (o.records && o.records.length > 0) {
     for (const r of o.records) {
       lines.push(`· ${r.areaType}형 ${formatMan(r.max)} (${fmtArea(r.area)}㎡/${r.floor}층) ${fmtDate(r.date)} 계약`);

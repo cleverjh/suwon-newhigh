@@ -42,26 +42,49 @@ function renderOurApt(report) {
     body.innerHTML = '';
     const o = report.ourApt;
     document.getElementById('ourAptName').textContent = o ? o.name : '-';
-    document.getElementById('ourAptBadge').textContent = o ? o.name : '우리 아파트';
+    if (o) {
+        document.getElementById('titleApt').textContent = o.name;
+        document.title = `${o.name} 신고가 브리핑`;
+        document.getElementById('ourAptBadge').textContent =
+            [o.districtName, o.umd].filter(Boolean).join(' ') || o.name;
+    }
     if (!o) {
         body.appendChild(el('p', 'empty', '우리 아파트 데이터가 아직 없습니다.'));
         return;
     }
 
-    body.appendChild(el('div', 'subhead', '최근 거래'));
+    body.appendChild(el('div', 'subhead', '최근 거래 · 같은 평형 인근 단지 비교'));
     if (o.recent && o.recent.length > 0) {
         for (const t of o.recent) {
             const row = el('div', 'mini-row');
-            row.appendChild(el('span', 'mini-label', `${fmtArea(t.area)}㎡ / ${t.floor}층`));
+            row.appendChild(el('span', 'mini-label', `${t.areaType}형 (${fmtArea(t.area)}㎡/${t.floor}층)`));
             row.appendChild(el('span', 'mini-price', formatMan(t.amountMan)));
             row.appendChild(el('span', 'mini-date', `${fmtDate(t.date)} 계약`));
             body.appendChild(row);
+
+            // 같은 면적형 비교: 우리 단지 최고가 + 인근 단지 최고가
+            const cmp = el('div', 'compare-row');
+            cmp.appendChild(el('span', 'compare-label', `${t.areaType}형 최고가`));
+            const ourMax = (o.records || []).find((r) => r.areaType === t.areaType);
+            if (ourMax) {
+                const chip = el('span', 'compare-chip ours');
+                chip.innerHTML = `우리 <b>${formatMan(ourMax.max)}</b>`;
+                cmp.appendChild(chip);
+            }
+            for (const n of t.neighbors || []) {
+                const chip = el('span', 'compare-chip');
+                chip.appendChild(document.createTextNode(`${n.apt} `));
+                const b = el('b', null, formatMan(n.max));
+                chip.appendChild(b);
+                cmp.appendChild(chip);
+            }
+            if (cmp.childElementCount > 1) body.appendChild(cmp);
         }
     } else {
         body.appendChild(el('p', 'mini-empty', '최근 거래 없음'));
     }
 
-    body.appendChild(el('div', 'subhead', '신고가 (역대 최고)'));
+    body.appendChild(el('div', 'subhead', '우리 단지 면적형별 신고가 (역대 최고)'));
     if (o.records && o.records.length > 0) {
         for (const r of o.records) {
             const row = el('div', 'mini-row');
