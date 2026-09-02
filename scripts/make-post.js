@@ -51,9 +51,10 @@ if (report.ourApt) {
       lines.push(
         `· ${t.areaType}형 ${formatMan(t.amountMan)} (${fmtArea(t.area)}㎡/${t.floor}층) ${fmtDate(t.date)} 계약`
       );
-      const ourMax = (o.records || []).find((r) => r.areaType === t.areaType);
+      const ourMaxMan =
+        t.ourMaxMan ?? (o.records || []).find((r) => r.areaType === t.areaType)?.max;
       const parts = [];
-      if (ourMax) parts.push(`우리 ${formatMan(ourMax.max)}`);
+      if (ourMaxMan) parts.push(`우리 ${formatMan(ourMaxMan)}`);
       for (const n of t.neighbors || []) parts.push(`${n.apt} ${formatMan(n.max)}`);
       if (parts.length > 0) {
         lines.push(`   └ ${t.areaType}형 최고가: ${parts.join(' / ')}`);

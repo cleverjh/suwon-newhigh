@@ -65,10 +65,12 @@ function renderOurApt(report) {
             // 같은 면적형 비교: 우리 단지 최고가 + 인근 단지 최고가
             const cmp = el('div', 'compare-row');
             cmp.appendChild(el('span', 'compare-label', `${t.areaType}형 최고가`));
-            const ourMax = (o.records || []).find((r) => r.areaType === t.areaType);
-            if (ourMax) {
+            const ourMaxMan = t.ourMaxMan
+                ?? (o.records || []).find((r) => r.areaType === t.areaType)?.max;
+            if (ourMaxMan) {
                 const chip = el('span', 'compare-chip ours');
-                chip.innerHTML = `우리 <b>${formatMan(ourMax.max)}</b>`;
+                chip.appendChild(document.createTextNode('우리 '));
+                chip.appendChild(el('b', null, formatMan(ourMaxMan)));
                 cmp.appendChild(chip);
             }
             for (const n of t.neighbors || []) {

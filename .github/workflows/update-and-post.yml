@@ -86,7 +86,9 @@ jobs:
           git add data docs/data
           if ! git diff --cached --quiet; then
             git commit -m "chore: 신고가 데이터 갱신 ($(TZ=Asia/Seoul date +%F))"
-            git push
+            # 실행 중에 main이 앞서 나갔을 수 있으므로 리베이스 후 푸시
+            git pull --rebase origin "$GITHUB_REF_NAME" || true
+            git push origin "HEAD:$GITHUB_REF_NAME"
           fi
 
       # ── 새 신고가가 있을 때만 게시글 생성 후 아파트너 게시 ───────

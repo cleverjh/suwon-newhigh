@@ -4,7 +4,12 @@
     "lawdCd": "41111",
     "districtName": "장안구",
     "umd": "정자동",
-    "match": ["SK스카이뷰", "SKSKYVIEW"]
+    "match": [
+      "SK스카이뷰",
+      "SKSKYVIEW"
+    ],
+    "maxAreaType": 110,
+    "maxAreaTypeComment": "면적형별 신고가 목록에 표시할 최대 전용면적형(㎡). 초과 평형은 목록에서 숨김"
   },
   "neighbors": {
     "comment": "우리 아파트와 같은 법정동(umd)의 단지를 인근 단지로 자동 선정. extra에 다른 동 단지명을 추가 가능",
@@ -12,6 +17,9 @@
     "maxComplexes": 8,
     "maxTypesPerComplex": 3
   },
-  "compareAreaTypes": [59, 84],
+  "compareAreaTypes": [
+    59,
+    84
+  ],
   "ourRecentTradeCount": 3
 }

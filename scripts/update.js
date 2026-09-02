@@ -152,10 +152,16 @@ async function main() {
   }).filter((d) => d.items.length > 0);
 
   // 4) 우리 아파트 섹션: 최근 거래 + 면적형별 역대 최고가
-  const ourRecords = dbRecords(maxDb)
+  const ourAllRecords = dbRecords(maxDb)
     .filter((r) => r.lawdCd === cfg.ourApt.lawdCd && matchesName(r.apt, cfg.ourApt.match))
     .sort((a, b) => a.areaType - b.areaType)
     .map((r) => ({ areaType: r.areaType, max: r.max, date: r.date, area: r.area, floor: r.floor }));
+  // 목록에 노출할 면적형은 maxAreaType 이하로 제한 (대형 평형은 거래가 드물어 목록만 길어짐).
+  // 비교용 최고가(ourMaxByType)는 전체를 그대로 쓴다.
+  const maxAreaType = cfg.ourApt.maxAreaType;
+  const ourRecords = maxAreaType
+    ? ourAllRecords.filter((r) => r.areaType <= maxAreaType)
+    : ourAllRecords;
 
   // 5) 인근 단지 섹션: 같은 법정동(+extra 지정 단지)의 면적형별 역대 최고가
   const extra = (cfg.neighbors.extra || []).map(normName);
@@ -175,7 +181,7 @@ async function main() {
   const sameTypeNeighbors = (areaType) =>
     (neighborByType.get(areaType) || []).sort((a, b) => b.max - a.max).slice(0, compareCount);
 
-  const ourMaxByType = new Map(ourRecords.map((r) => [r.areaType, r]));
+  const ourMaxByType = new Map(ourAllRecords.map((r) => [r.areaType, r]));
 
   const ourApt = {
     name: cfg.ourApt.name,
@@ -188,7 +194,8 @@ async function main() {
         const ourMax = ourMaxByType.get(t.areaType);
         return {
           ...t,
-          // 같은 면적형의 우리 단지 최고가 대비 차이 (음수면 최고가에 못 미침)
+          // 같은 면적형의 우리 단지 최고가 (목록에서 잘린 대형 평형도 비교되도록 값을 직접 담음)
+          ourMaxMan: ourMax ? ourMax.max : null,
           vsOurMaxMan: ourMax ? t.amountMan - ourMax.max : null,
           // 같은 면적형 인근 단지 최고가 (비교용)
           neighbors: sameTypeNeighbors(t.areaType),
