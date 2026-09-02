@@ -29,6 +29,12 @@ function fmtDate(d) {
     return `${y.slice(2)}.${m}.${day}`;
 }
 
+// 캐시된 옛 HTML이 남아 특정 요소가 없더라도 렌더링 전체가 멈추지 않도록 한다
+function setText(id, text) {
+    const e = document.getElementById(id);
+    if (e) e.textContent = text;
+}
+
 function el(tag, cls, text) {
     const e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -39,14 +45,14 @@ function el(tag, cls, text) {
 /* ── ① 우리 아파트 ─────────────────────────────── */
 function renderOurApt(report) {
     const body = document.getElementById('ourAptBody');
+    if (!body) return;
     body.innerHTML = '';
     const o = report.ourApt;
-    document.getElementById('ourAptName').textContent = o ? o.name : '-';
+    setText('ourAptName', o ? o.name : '-');
     if (o) {
-        document.getElementById('titleApt').textContent = o.name;
+        setText('titleApt', o.name);
         document.title = `${o.name} 신고가 브리핑`;
-        document.getElementById('ourAptBadge').textContent =
-            [o.districtName, o.umd].filter(Boolean).join(' ') || o.name;
+        setText('ourAptBadge', [o.districtName, o.umd].filter(Boolean).join(' ') || o.name);
     }
     if (!o) {
         body.appendChild(el('p', 'empty', '우리 아파트 데이터가 아직 없습니다.'));
@@ -103,9 +109,9 @@ function renderOurApt(report) {
 /* ── ② 인근 단지 신고가 ────────────────────────── */
 function renderNeighbors(report) {
     const body = document.getElementById('neighborBody');
+    if (!body) return;
     body.innerHTML = '';
-    document.getElementById('neighborUmd').textContent =
-        report.ourApt ? report.ourApt.umd : '-';
+    setText('neighborUmd', report.ourApt ? report.ourApt.umd : '-');
 
     if (!report.neighbors || report.neighbors.length === 0) {
         body.appendChild(el('p', 'empty', '인근 단지 데이터가 아직 없습니다.'));
@@ -148,13 +154,14 @@ function renderRow(item, rank) {
 
 function renderToday(report) {
     const content = document.getElementById('content');
+    if (!content) return;
     content.innerHTML = '';
 
     const total = report.totalCount || 0;
-    document.getElementById('countChip').textContent = `${total}건`;
+    setText('countChip', `${total}건`);
     if (report.generatedAt) {
-        document.getElementById('dateChip').textContent = `${report.generatedAt} 기준`;
-        document.getElementById('dateBadge').textContent = report.generatedAt;
+        setText('dateChip', `${report.generatedAt} 기준`);
+        setText('dateBadge', report.generatedAt);
     }
 
     if (!report.districts || total === 0) {
@@ -174,9 +181,14 @@ function renderToday(report) {
 }
 
 function render(report) {
-    renderOurApt(report);
-    renderNeighbors(report);
-    renderToday(report);
+    // 한 섹션이 실패해도 나머지는 그린다 (부분 실패로 화면 전체가 비지 않도록)
+    for (const [name, fn] of [['우리 아파트', renderOurApt], ['인근 단지', renderNeighbors], ['오늘의 신고가', renderToday]]) {
+        try {
+            fn(report);
+        } catch (err) {
+            console.error(`${name} 렌더링 실패:`, err);
+        }
+    }
 }
 
 async function load() {
@@ -202,8 +214,11 @@ async function load() {
                 }
             } catch { /* 무시 */ }
         }
-        document.getElementById('content').innerHTML =
-            '<p class="empty">데이터를 불러오지 못했습니다.</p>';
+        const content = document.getElementById('content');
+        if (content) {
+            content.innerHTML = '';
+            content.appendChild(el('p', 'empty', '데이터를 불러오지 못했습니다. 새로고침해 주세요.'));
+        }
     }
 }
 
