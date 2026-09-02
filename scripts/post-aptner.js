@@ -39,6 +39,57 @@ async function shot(page, name) {
   await page.screenshot({ path: path.join(SHOTS, `${name}.png`), fullPage: true });
 }
 
+/**
+ * 셀렉터를 못 찾았을 때 페이지 구조를 로그로 남긴다.
+ * 아티팩트를 열어보지 않고도 로그만으로 올바른 셀렉터를 찾을 수 있게 하기 위함.
+ */
+async function dumpPageStructure(page, label) {
+  console.log(`\n===== [${label}] 페이지 구조 진단 =====`);
+  console.log('URL   :', page.url());
+  console.log('TITLE :', await page.title().catch(() => '(제목 없음)'));
+
+  const describe = async (frame, tag) => {
+    try {
+      const items = await frame.evaluate(() => {
+        const out = [];
+        for (const e of document.querySelectorAll('input, textarea, select, button, a[role="button"], div[contenteditable="true"]')) {
+          const r = e.getBoundingClientRect();
+          out.push({
+            tag: e.tagName.toLowerCase(),
+            type: e.getAttribute('type') || '',
+            name: e.getAttribute('name') || '',
+            id: e.id || '',
+            cls: (e.className || '').toString().slice(0, 60),
+            ph: e.getAttribute('placeholder') || '',
+            text: (e.innerText || e.value || '').trim().slice(0, 24),
+            visible: r.width > 0 && r.height > 0,
+          });
+        }
+        return out.slice(0, 40);
+      });
+      if (items.length === 0) return;
+      console.log(`--- ${tag} (${items.length}개) ---`);
+      for (const i of items) {
+        console.log(
+          `  <${i.tag}${i.type ? ` type=${i.type}` : ''}${i.name ? ` name=${i.name}` : ''}` +
+            `${i.id ? ` id=${i.id}` : ''}${i.ph ? ` placeholder="${i.ph}"` : ''}` +
+            `${i.cls ? ` class="${i.cls}"` : ''}> ${i.text}${i.visible ? '' : '  [숨김]'}`
+        );
+      }
+    } catch (err) {
+      console.log(`  (${tag} 조회 실패: ${err.message})`);
+    }
+  };
+
+  await describe(page.mainFrame(), '메인 프레임');
+  for (const f of page.frames()) {
+    if (f === page.mainFrame()) continue;
+    console.log(`--- iframe: ${f.url()} ---`);
+    await describe(f, 'iframe 내부');
+  }
+  console.log('===== 진단 끝 =====\n');
+}
+
 /** 여러 후보 셀렉터 중 처음 보이는 요소를 반환 */
 async function firstVisible(page, selectors) {
   for (const sel of selectors) {
@@ -78,6 +129,9 @@ async function main() {
     await page.goto(env('APTNER_LOGIN_URL', 'https://www.aptner.com/login'), {
       waitUntil: 'domcontentloaded',
     });
+    // 로그인 폼이 스크립트로 그려지는 경우가 있어 네트워크가 잠잠해질 때까지 기다린다
+    await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForTimeout(2000);
     await shot(page, '01-login-page');
 
     const idInput = await firstVisible(page, [
@@ -96,7 +150,13 @@ async function main() {
       'input[placeholder*="비밀번호"]',
       'input[type="password"]',
     ].filter(Boolean));
-    if (!idInput || !pwInput) throw new Error('로그인 입력창을 찾지 못했습니다. 스크린샷을 확인하고 APTNER_SEL_ID/PW를 설정하세요.');
+    if (!idInput || !pwInput) {
+      await dumpPageStructure(page, '로그인 페이지');
+      throw new Error(
+        '로그인 입력창을 찾지 못했습니다. 위 진단 목록에서 아이디/비밀번호 입력 요소를 찾아 ' +
+          'APTNER_SEL_ID / APTNER_SEL_PW 를 설정하거나, APTNER_LOGIN_URL 이 올바른지 확인하세요.'
+      );
+    }
 
     await idInput.fill(id);
     await pwInput.fill(pw);
@@ -109,7 +169,10 @@ async function main() {
       'a:has-text("로그인")',
       'input[type="submit"]',
     ].filter(Boolean));
-    if (!loginBtn) throw new Error('로그인 버튼을 찾지 못했습니다. APTNER_SEL_LOGIN을 설정하세요.');
+    if (!loginBtn) {
+      await dumpPageStructure(page, '로그인 버튼 탐색');
+      throw new Error('로그인 버튼을 찾지 못했습니다. APTNER_SEL_LOGIN을 설정하세요.');
+    }
     await loginBtn.click();
     await page.waitForLoadState('networkidle').catch(() => {});
     await shot(page, '03-after-login');
@@ -117,6 +180,7 @@ async function main() {
     // 2) 글쓰기 페이지 이동
     await page.goto(writeUrl, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForTimeout(2000);
     await shot(page, '04-write-page');
 
     // 3) 제목/본문 입력
@@ -126,7 +190,10 @@ async function main() {
       'input[placeholder*="제목"]',
       'input[type="text"]',
     ].filter(Boolean));
-    if (!titleInput) throw new Error('제목 입력창을 찾지 못했습니다. APTNER_SEL_TITLE을 설정하세요.');
+    if (!titleInput) {
+      await dumpPageStructure(page, '글쓰기 페이지');
+      throw new Error('제목 입력창을 찾지 못했습니다. APTNER_SEL_TITLE을 설정하세요.');
+    }
     await titleInput.fill(title);
 
     const bodySel = env('APTNER_SEL_BODY', '');
@@ -163,7 +230,10 @@ async function main() {
         } catch { /* 다음 프레임 */ }
       }
     }
-    if (!filledBody) throw new Error('본문 입력 영역을 찾지 못했습니다. APTNER_SEL_BODY를 설정하세요.');
+    if (!filledBody) {
+      await dumpPageStructure(page, '본문 입력 탐색');
+      throw new Error('본문 입력 영역을 찾지 못했습니다. APTNER_SEL_BODY를 설정하세요.');
+    }
 
     // 이미지 카드 첨부 (out/post-image.png가 있으면)
     const imgPath = path.join(__dirname, '..', 'out', 'post-image.png');
@@ -191,7 +261,10 @@ async function main() {
       'button:has-text("완료")',
       'button[type="submit"]',
     ].filter(Boolean));
-    if (!submitBtn) throw new Error('등록 버튼을 찾지 못했습니다. APTNER_SEL_SUBMIT을 설정하세요.');
+    if (!submitBtn) {
+      await dumpPageStructure(page, '등록 버튼 탐색');
+      throw new Error('등록 버튼을 찾지 못했습니다. APTNER_SEL_SUBMIT을 설정하세요.');
+    }
     await submitBtn.click();
     await page.waitForLoadState('networkidle').catch(() => {});
     await shot(page, '06-after-submit');
