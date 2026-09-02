@@ -39,6 +39,23 @@ jobs:
       APTNER_PW: ${{ secrets.APTNER_PW }}
       APTNER_WRITE_URL: ${{ secrets.APTNER_WRITE_URL }}
     steps:
+      - name: 실행 옵션 요약
+        run: |
+          {
+            echo "### 이번 실행 옵션"
+            echo ""
+            echo "| 옵션 | 값 | 실행 여부 |"
+            echo "|---|---|---|"
+            echo "| backfill (과거 데이터 백필) | \`${{ inputs.backfill }}\` | ${{ inputs.backfill == true && '✅ 실행' || '⏭️ 건너뜀' }} |"
+            echo "| reset (최고가 DB 초기화) | \`${{ inputs.reset }}\` | ${{ (inputs.backfill == true && inputs.reset == true) && '✅ 실행' || '⏭️ 건너뜀' }} |"
+            echo "| post (아파트너 게시) | \`${{ inputs.post }}\` | ${{ inputs.post != false && '조건부' || '⏭️ 건너뜀' }} |"
+            echo "| dry_run (등록 직전까지) | \`${{ inputs.dry_run }}\` | ${{ inputs.dry_run == true && '✅ 적용' || '- ' }} |"
+            echo ""
+            if [ "${{ inputs.backfill }}" != "true" ]; then
+              echo "> 백필을 돌리려면 Run workflow에서 **[backfill]** 체크박스를 켜야 합니다. (DB 재구축은 **[reset]**도 함께)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
