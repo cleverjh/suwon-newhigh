@@ -8,8 +8,14 @@
  * - 중간에 끊겨도 data/backfill-state.json 에 진행 상황을 저장해 이어서 실행 가능
  * - 호출량: 약 250개월 × 4개 구 ≒ 1,000회 (공공데이터포털 일일 트래픽 한도 내에서 실행)
  *
+ * 중요: 최근 EXCLUDE_RECENT_DAYS일(기본 14일) 이내 계약은 최고가 DB에 반영하지 않는다.
+ * 백필은 "과거 기준선"을 만드는 작업이므로, 최근 거래까지 최고가로 등록해 버리면
+ * 첫 정기 실행이 그 거래들을 신고가로 탐지하지 못한다.
+ * (우리 아파트 거래 이력에는 최근 거래도 그대로 기록한다 — 최근 거래 표시에 쓰이므로)
+ *
  * 필요 환경변수: MOLIT_API_KEY
- * 선택 환경변수: BACKFILL_START(기본 200601), BACKFILL_DELAY_MS(기본 250)
+ * 선택 환경변수: BACKFILL_START(기본 200601), BACKFILL_DELAY_MS(기본 250),
+ *               EXCLUDE_RECENT_DAYS(기본 14, update.js의 RECENT_DAYS와 맞출 것)
  */
 
 const {
@@ -34,6 +40,12 @@ async function main() {
 
   const start = process.env.BACKFILL_START || '200601';
   const delayMs = parseInt(process.env.BACKFILL_DELAY_MS || '250', 10);
+  const excludeDays = parseInt(process.env.EXCLUDE_RECENT_DAYS || '14', 10);
+  // 이 날짜 이후(포함) 계약은 최고가 DB에 넣지 않는다 → 첫 정기 실행이 신고가로 탐지
+  const maxDbCutoff = new Date(Date.now() + 9 * 3600 * 1000 - excludeDays * 86400 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  console.log(`최고가 DB 반영 대상: ${maxDbCutoff} 이전 계약 (최근 ${excludeDays}일은 신고가 탐지용으로 제외)`);
   const { year, month } = nowKST();
   const end = `${year}${String(month).padStart(2, '0')}`;
 
@@ -84,10 +96,12 @@ async function main() {
 
       for (const t of rows) {
         if (t.canceled || t.amountMan <= 0) continue;
-        const key = tradeKey(t);
-        const prev = maxDb[key];
-        if (!prev || t.amountMan > prev.max) {
-          maxDb[key] = { max: t.amountMan, date: t.date, area: t.area, floor: t.floor, umd: t.umd };
+        if (t.date < maxDbCutoff) {
+          const key = tradeKey(t);
+          const prev = maxDb[key];
+          if (!prev || t.amountMan > prev.max) {
+            maxDb[key] = { max: t.amountMan, date: t.date, area: t.area, floor: t.floor, umd: t.umd };
+          }
         }
         // 우리 아파트 거래는 전체 이력 보관 (최근 거래 표시용)
         if (isOurApt(t, cfg)) {

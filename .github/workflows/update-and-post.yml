@@ -10,6 +10,10 @@ on:
         description: '[backfill] 과거 데이터 백필 — 최초 1회만, 20~30분 소요'
         type: boolean
         default: false
+      reset:
+        description: '[reset] 백필 전 최고가 DB 초기화 (backfill과 함께 체크, DB 재구축용)'
+        type: boolean
+        default: false
       post:
         description: '[post] 아파트너 게시 실행 (해제하면 데이터 갱신만)'
         type: boolean
@@ -42,6 +46,12 @@ jobs:
           node-version: 22
 
       # ── 최초 1회: 과거 실거래 전체 백필 ──────────────────────────
+      - name: 최고가 DB 초기화
+        if: inputs.backfill == true && inputs.reset == true
+        run: |
+          rm -f data/max-prices.json data/backfill-state.json data/announced.json
+          echo "최고가 DB·진행상태·게시이력을 초기화했습니다. (우리 아파트 거래 이력은 유지)"
+
       - name: 과거 데이터 백필
         if: inputs.backfill == true
         run: node scripts/backfill.js
