@@ -1,0 +1,16 @@
+{
+  "ourApt": {
+    "name": "수원SK스카이뷰",
+    "lawdCd": "41111",
+    "districtName": "장안구",
+    "umd": "정자동",
+    "match": ["SK스카이뷰", "SKSKYVIEW"]
+  },
+  "neighbors": {
+    "comment": "우리 아파트와 같은 법정동(umd)의 단지를 인근 단지로 자동 선정. extra에 다른 동 단지명을 추가 가능",
+    "extra": [],
+    "maxComplexes": 8,
+    "maxTypesPerComplex": 3
+  },
+  "ourRecentTradeCount": 3
+}

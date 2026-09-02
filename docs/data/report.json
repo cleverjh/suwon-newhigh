@@ -3,6 +3,47 @@
  "generatedAt": "샘플 데이터",
  "rangeDays": 14,
  "totalCount": 14,
+ "ourApt": {
+  "name": "수원SK스카이뷰",
+  "umd": "정자동",
+  "districtName": "장안구",
+  "recent": [
+   { "date": "2026-08-24", "amountMan": 65000, "area": 84.98, "areaType": 84, "floor": 15 },
+   { "date": "2026-08-18", "amountMan": 50000, "area": 59.96, "areaType": 59, "floor": 7 },
+   { "date": "2026-08-10", "amountMan": 62500, "area": 84.86, "areaType": 84, "floor": 3 }
+  ],
+  "records": [
+   { "areaType": 59, "max": 59000, "date": "2021-09-11", "area": 59.96, "floor": 18 },
+   { "areaType": 84, "max": 79000, "date": "2021-08-21", "area": 84.98, "floor": 21 },
+   { "areaType": 98, "max": 85000, "date": "2021-10-02", "area": 98.31, "floor": 14 },
+   { "areaType": 111, "max": 92000, "date": "2021-07-30", "area": 111.79, "floor": 22 }
+  ]
+ },
+ "neighbors": [
+  {
+   "apt": "화서역파크푸르지오",
+   "umd": "정자동",
+   "records": [
+    { "areaType": 84, "max": 105000, "date": "2026-05-12", "area": 84.83, "floor": 25 },
+    { "areaType": 59, "max": 78000, "date": "2026-03-20", "area": 59.94, "floor": 17 }
+   ]
+  },
+  {
+   "apt": "동신3차",
+   "umd": "정자동",
+   "records": [
+    { "areaType": 84, "max": 49000, "date": "2025-10-02", "area": 84.6, "floor": 9 },
+    { "areaType": 59, "max": 39000, "date": "2026-01-15", "area": 59.76, "floor": 12 }
+   ]
+  },
+  {
+   "apt": "백설마을풍림",
+   "umd": "정자동",
+   "records": [
+    { "areaType": 59, "max": 42000, "date": "2025-12-28", "area": 59.88, "floor": 11 }
+   ]
+  }
+ ],
  "districts": [
   {
    "name": "영통구",

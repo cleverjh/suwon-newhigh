@@ -21,6 +21,8 @@ const {
   loadJson,
   saveJson,
   sleep,
+  loadConfig,
+  isOurApt,
 } = require('./lib');
 
 async function main() {
@@ -50,9 +52,19 @@ async function main() {
     }
   }
 
+  const cfg = loadConfig();
   const maxDb = loadJson(PATHS.maxDb, {});
+  const ourTrades = loadJson(PATHS.ourTrades, { trades: [] });
+  const ourSeen = new Set(ourTrades.trades.map((t) => `${t.date}|${t.amountMan}|${t.area}|${t.floor}`));
   const state = loadJson(PATHS.backfillState, { done: [] });
   const doneSet = new Set(state.done);
+
+  const saveAll = () => {
+    ourTrades.trades.sort((a, b) => (a.date < b.date ? -1 : 1));
+    saveJson(PATHS.maxDb, maxDb);
+    saveJson(PATHS.ourTrades, ourTrades);
+    saveJson(PATHS.backfillState, { done: [...doneSet] });
+  };
 
   let calls = 0;
   for (const d of DISTRICTS) {
@@ -65,8 +77,7 @@ async function main() {
         rows = await fetchMonth(serviceKey, d.code, ym);
       } catch (err) {
         // 진행 상황 저장 후 종료 → 다음 실행 때 이어서
-        saveJson(PATHS.maxDb, maxDb);
-        saveJson(PATHS.backfillState, { done: [...doneSet] });
+        saveAll();
         console.error(`${d.name} ${ym} 조회 실패, 진행 상황 저장 후 중단:`, err.message);
         process.exit(2);
       }
@@ -76,24 +87,33 @@ async function main() {
         const key = tradeKey(t);
         const prev = maxDb[key];
         if (!prev || t.amountMan > prev.max) {
-          maxDb[key] = { max: t.amountMan, date: t.date, area: t.area, floor: t.floor };
+          maxDb[key] = { max: t.amountMan, date: t.date, area: t.area, floor: t.floor, umd: t.umd };
+        }
+        // 우리 아파트 거래는 전체 이력 보관 (최근 거래 표시용)
+        if (isOurApt(t, cfg)) {
+          const seenKey = `${t.date}|${t.amountMan}|${t.area}|${t.floor}`;
+          if (!ourSeen.has(seenKey)) {
+            ourSeen.add(seenKey);
+            ourTrades.trades.push({
+              date: t.date, amountMan: t.amountMan, area: t.area,
+              areaType: t.areaType, floor: t.floor,
+            });
+          }
         }
       }
 
       doneSet.add(jobKey);
       calls += 1;
       if (calls % 20 === 0) {
-        saveJson(PATHS.maxDb, maxDb);
-        saveJson(PATHS.backfillState, { done: [...doneSet] });
+        saveAll();
         console.log(`진행: ${doneSet.size}/${months.length * DISTRICTS.length} (${d.name} ${ym}, ${rows.length}건)`);
       }
       await sleep(delayMs);
     }
   }
 
-  saveJson(PATHS.maxDb, maxDb);
-  saveJson(PATHS.backfillState, { done: [...doneSet] });
-  console.log(`백필 완료: 최고가 DB ${Object.keys(maxDb).length}개 (단지·면적형)`);
+  saveAll();
+  console.log(`백필 완료: 최고가 DB ${Object.keys(maxDb).length}개 (단지·면적형), 우리 아파트 거래 ${ourTrades.trades.length}건`);
 }
 
 main().catch((err) => {

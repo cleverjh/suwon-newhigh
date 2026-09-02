@@ -25,12 +25,31 @@ const API_BASE =
 
 const ROOT = path.join(__dirname, '..');
 const PATHS = {
+  config: path.join(ROOT, 'config.json'),
   maxDb: path.join(ROOT, 'data', 'max-prices.json'),
   announced: path.join(ROOT, 'data', 'announced.json'),
   backfillState: path.join(ROOT, 'data', 'backfill-state.json'),
+  ourTrades: path.join(ROOT, 'data', 'our-apt-trades.json'),
   report: path.join(ROOT, 'docs', 'data', 'report.json'),
   post: path.join(ROOT, 'out', 'post.md'),
 };
+
+/** 단지명 비교용 정규화 (공백 제거 + 대문자) */
+function normName(s) {
+  return String(s || '').replace(/\s/g, '').toUpperCase();
+}
+
+/** config.json 로드 */
+function loadConfig() {
+  return JSON.parse(fs.readFileSync(PATHS.config, 'utf8'));
+}
+
+/** 우리 아파트 거래인지 판정 */
+function isOurApt(trade, cfg) {
+  if (trade.lawdCd !== cfg.ourApt.lawdCd) return false;
+  const n = normName(trade.apt);
+  return cfg.ourApt.match.some((p) => n.includes(normName(p)));
+}
 
 /** 현재 KST 기준 Date 유사 객체 반환 */
 function nowKST() {
@@ -173,6 +192,9 @@ module.exports = {
   DISTRICTS,
   API_BASE,
   PATHS,
+  normName,
+  loadConfig,
+  isOurApt,
   nowKST,
   recentMonths,
   fetchMonth,

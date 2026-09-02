@@ -64,17 +64,17 @@ jobs:
 
       # ── 새 신고가가 있을 때만 게시글 생성 후 아파트너 게시 ───────
       - name: 게시글 생성
-        if: steps.update.outputs.has_new == 'true' && inputs.post != false
+        if: steps.update.outputs.should_post == 'true' && inputs.post != false
         run: node scripts/make-post.js
 
       - name: Playwright 설치
-        if: steps.update.outputs.has_new == 'true' && inputs.post != false && env.APTNER_ID != ''
+        if: steps.update.outputs.should_post == 'true' && inputs.post != false && env.APTNER_ID != ''
         run: |
           npm install
           npx playwright install --with-deps chromium
 
       - name: 아파트너 게시
-        if: steps.update.outputs.has_new == 'true' && inputs.post != false && env.APTNER_ID != ''
+        if: steps.update.outputs.should_post == 'true' && inputs.post != false && env.APTNER_ID != ''
         env:
           DRY_RUN: ${{ inputs.dry_run == true && '1' || '' }}
         run: node scripts/post-aptner.js

@@ -1,6 +1,7 @@
 'use strict';
 
-/* 수원 오늘의 신고가 — report.json 렌더링 */
+/* 수원SK스카이뷰 신고가 브리핑 — report.json 렌더링
+   구성: ① 우리 아파트 최근 거래·신고가 ② 인근 단지 신고가 ③ 오늘의 수원 신고가 */
 
 // 만원 → "15억", "10억3천", "8억7천500", "4억900" 형식
 function formatMan(man) {
@@ -17,6 +18,11 @@ function formatMan(man) {
     return s || '0';
 }
 
+function fmtDate(d) {
+    const [y, m, day] = d.split('-');
+    return `${y.slice(2)}.${m}.${day}`;
+}
+
 function el(tag, cls, text) {
     const e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -24,6 +30,71 @@ function el(tag, cls, text) {
     return e;
 }
 
+/* ── ① 우리 아파트 ─────────────────────────────── */
+function renderOurApt(report) {
+    const body = document.getElementById('ourAptBody');
+    body.innerHTML = '';
+    const o = report.ourApt;
+    document.getElementById('ourAptName').textContent = o ? o.name : '-';
+    document.getElementById('ourAptBadge').textContent = o ? o.name : '우리 아파트';
+    if (!o) {
+        body.appendChild(el('p', 'empty', '우리 아파트 데이터가 아직 없습니다.'));
+        return;
+    }
+
+    body.appendChild(el('div', 'subhead', '최근 거래'));
+    if (o.recent && o.recent.length > 0) {
+        for (const t of o.recent) {
+            const row = el('div', 'mini-row');
+            row.appendChild(el('span', 'mini-label', `${t.area}㎡ / ${t.floor}층`));
+            row.appendChild(el('span', 'mini-price', formatMan(t.amountMan)));
+            row.appendChild(el('span', 'mini-date', `${fmtDate(t.date)} 계약`));
+            body.appendChild(row);
+        }
+    } else {
+        body.appendChild(el('p', 'mini-empty', '최근 거래 없음'));
+    }
+
+    body.appendChild(el('div', 'subhead', '신고가 (역대 최고)'));
+    if (o.records && o.records.length > 0) {
+        for (const r of o.records) {
+            const row = el('div', 'mini-row');
+            row.appendChild(el('span', 'mini-label', `${r.areaType}형 (${r.area}㎡/${r.floor}층)`));
+            row.appendChild(el('span', 'mini-price strong', formatMan(r.max)));
+            row.appendChild(el('span', 'mini-date', `${fmtDate(r.date)} 계약`));
+            body.appendChild(row);
+        }
+    } else {
+        body.appendChild(el('p', 'mini-empty', '데이터 없음'));
+    }
+}
+
+/* ── ② 인근 단지 신고가 ────────────────────────── */
+function renderNeighbors(report) {
+    const body = document.getElementById('neighborBody');
+    body.innerHTML = '';
+    document.getElementById('neighborUmd').textContent =
+        report.ourApt ? report.ourApt.umd : '-';
+
+    if (!report.neighbors || report.neighbors.length === 0) {
+        body.appendChild(el('p', 'empty', '인근 단지 데이터가 아직 없습니다.'));
+        return;
+    }
+    for (const n of report.neighbors) {
+        const wrap = el('div', 'neighbor');
+        wrap.appendChild(el('div', 'neighbor-name', n.apt));
+        for (const r of n.records) {
+            const row = el('div', 'mini-row');
+            row.appendChild(el('span', 'mini-label', `${r.areaType}형 (${r.area}㎡/${r.floor}층)`));
+            row.appendChild(el('span', 'mini-price', formatMan(r.max)));
+            row.appendChild(el('span', 'mini-date', `${fmtDate(r.date)} 계약`));
+            wrap.appendChild(row);
+        }
+        body.appendChild(wrap);
+    }
+}
+
+/* ── ③ 오늘의 신고가 ───────────────────────────── */
 function renderRow(item, rank) {
     const row = el('div', 'trade-row');
     row.appendChild(el('span', 'rank', String(rank)));
@@ -37,24 +108,22 @@ function renderRow(item, rank) {
         : el('span', 'diff', `▲${formatMan(item.diffMan)}`));
     main.appendChild(top);
 
-    const [y, m, d] = item.date.split('-');
     main.appendChild(el('div', 'trade-meta',
-        `${item.umd} · ${item.area}㎡ / ${item.floor}층 · ${y.slice(2)}.${m}.${d} 계약`));
+        `${item.umd} · ${item.area}㎡ / ${item.floor}층 · ${fmtDate(item.date)} 계약`));
 
     row.appendChild(main);
     return row;
 }
 
-function render(report) {
+function renderToday(report) {
     const content = document.getElementById('content');
     content.innerHTML = '';
 
     const total = report.totalCount || 0;
-    document.getElementById('cityBadge').textContent = `${report.city} ${total}건`;
-    document.getElementById('totalBadge').textContent = `총 ${total}건`;
     document.getElementById('countChip').textContent = `${total}건`;
     if (report.generatedAt) {
         document.getElementById('dateChip').textContent = `${report.generatedAt} 기준`;
+        document.getElementById('dateBadge').textContent = report.generatedAt;
     }
 
     if (!report.districts || total === 0) {
@@ -71,6 +140,12 @@ function render(report) {
             content.appendChild(renderRow(item, i + 1));
         });
     }
+}
+
+function render(report) {
+    renderOurApt(report);
+    renderNeighbors(report);
+    renderToday(report);
 }
 
 async function load() {
