@@ -7,15 +7,15 @@ on:
   workflow_dispatch:
     inputs:
       backfill:
-        description: '과거 데이터 백필 실행 (최초 1회 필요)'
+        description: '[backfill] 과거 데이터 백필 — 최초 1회만, 20~30분 소요'
         type: boolean
         default: false
       post:
-        description: '아파트너 게시 실행'
+        description: '[post] 아파트너 게시 실행 (해제하면 데이터 갱신만)'
         type: boolean
         default: true
       dry_run:
-        description: '아파트너 등록 버튼 직전까지만 실행(스크린샷 확인용)'
+        description: '[dry_run] 등록 버튼 누르기 직전까지만 — 미리보기·스크린샷 확인용'
         type: boolean
         default: false
 
