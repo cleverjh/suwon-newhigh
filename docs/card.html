@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수원SK스카이뷰 신고가 브리핑 카드</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+/* 아파트너 게시용 이미지 카드 (640px 고정) — Claude Design 시안 반영 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #f5f0e8; --card: #fffdf9; --navy: #1f2a44; --red: #d63031;
+    --red-soft: #fdecea; --blue: #3d5a99; --blue-soft: #e8edf7;
+    --gray: #8a8a8a; --line: #eee5d8; --band: #f1ece3; --track: #ece5d6;
+}
+body { background: #e8e2d6; }
+.card {
+    width: 640px; margin: 24px auto; padding: 30px 24px 26px;
+    background: var(--bg); color: var(--navy);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+.head { padding: 0 4px 16px; }
+.head-sub { font-size: 13px; color: var(--gray); font-weight: 700; margin-bottom: 2px; }
+.head-title { font-size: 28px; font-weight: 900; letter-spacing: -1px; line-height: 1.08; white-space: nowrap; }
+.head-title .apt { color: var(--red); }
+
+.panel {
+    background: var(--card); border-radius: 16px; padding: 18px 16px 14px;
+    box-shadow: 0 2px 10px rgba(31, 42, 68, .06);
+}
+.panel + .panel { margin-top: 14px; }
+.panel.framed { border: 2px solid var(--navy); }
+.panel-head { display: flex; align-items: center; gap: 8px; margin: 0 2px 8px; }
+.panel-head strong { font-size: 20px; font-weight: 900; }
+.tag {
+    border: 1.5px solid var(--red); color: var(--red);
+    font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 6px;
+}
+.tag-right { margin-left: auto; font-size: 12px; color: var(--gray); }
+.band {
+    font-size: 13px; font-weight: 800; background: var(--band);
+    border-radius: 6px; padding: 5px 10px; margin: 12px 2px 8px;
+}
+
+/* 면적형별 막대 비교 */
+.bars { display: flex; flex-direction: column; gap: 6px; padding: 0 2px; }
+.bar-row { display: flex; align-items: center; gap: 8px; }
+.bar-name {
+    flex: none; width: 148px; font-size: 12.5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bar-name.ours { color: var(--red); font-weight: 900; }
+.bar-name.other { color: var(--navy); font-weight: 700; }
+.bar-track { display: block; flex: 1; height: 24px; background: var(--track); border-radius: 5px; overflow: hidden; }
+.bar-fill { display: block; height: 100%; border-radius: 5px; background: #31405f; }
+.bar-fill.ours { background: var(--red); }
+.bar-price {
+    flex: none; width: 86px; text-align: right; font-size: 15px;
+    font-weight: 900; letter-spacing: -0.5px; white-space: nowrap;
+}
+.bar-price.ours { color: var(--red); }
+.chip {
+    flex: none; min-width: 74px; text-align: center; font-size: 12px; font-weight: 800;
+    border-radius: 6px; padding: 4px 6px; white-space: nowrap;
+}
+.chip.base { color: #fff; background: var(--red); }
+.chip.up { color: var(--red); background: var(--red-soft); }
+.chip.down { color: var(--blue); background: var(--blue-soft); }
+.chip.same { color: var(--gray); background: var(--band); }
+
+/* 최근 거래 */
+.recent-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-bottom: 1px solid var(--line); font-size: 13px;
+}
+.recent-label { flex: 1; min-width: 0; }
+.recent-price {
+    flex: none; font-size: 16px; font-weight: 900; color: var(--red);
+    letter-spacing: -0.4px; white-space: nowrap;
+}
+.recent-vs { flex: none; width: 110px; text-align: right; font-size: 11.5px; font-weight: 700; color: var(--blue); }
+.recent-vs.up { color: var(--red); }
+.recent-date { flex: none; width: 78px; text-align: right; font-size: 11.5px; color: var(--gray); }
+
+/* 오늘의 신고가 */
+.district {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 10px 4px 4px; border-bottom: 1.5px solid var(--navy);
+}
+.district-name { font-size: 15px; font-weight: 900; }
+.district-count { font-size: 11.5px; color: var(--gray); font-weight: 600; }
+.item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 4px; border-bottom: 1px solid var(--line);
+}
+.item.odd { background: #fdf7ef; }
+.rank {
+    flex: none; width: 20px; height: 20px; border-radius: 5px; background: var(--red);
+    color: #fff; font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+}
+.item-apt {
+    flex: none; width: 190px; font-size: 13.5px; font-weight: 800; letter-spacing: -0.3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.item-meta {
+    flex: 1; font-size: 11.5px; color: var(--gray);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.item-price {
+    flex: none; font-size: 16px; font-weight: 900; color: var(--red);
+    letter-spacing: -0.5px; white-space: nowrap;
+}
+.item-diff {
+    flex: none; min-width: 64px; text-align: center; font-size: 11.5px; font-weight: 800;
+    border-radius: 6px; padding: 3px 6px; white-space: nowrap;
+}
+.item-diff.up { color: var(--red); background: var(--red-soft); }
+.item-diff.new { color: var(--gray); background: var(--band); }
+
+.foot { margin-top: 12px; padding: 0 6px; font-size: 11px; color: #7a7264; line-height: 1.7; }
+.foot b { color: var(--red); margin-right: 6px; }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+    <header class="head">
+        <p class="head-sub" id="headSub">국토부 실거래가 기준</p>
+        <h1 class="head-title"><span class="apt" id="headApt">우리 아파트</span> 신고가 브리핑</h1>
+    </header>
+
+    <section class="panel framed">
+        <div class="panel-head">
+            <strong>🏠 우리 단지 vs 인근 단지</strong>
+            <span class="tag">면적형별 역대 최고가</span>
+        </div>
+        <div id="compare"></div>
+        <div id="recent"></div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">
+            <strong>🔥 오늘의 수원 신고가</strong>
+            <span class="tag" id="topTag">구별 TOP 3</span>
+            <span class="tag-right" id="totalTag"></span>
+        </div>
+        <div id="today"></div>
+    </section>
+
+    <footer class="foot">
+        <b>신고가 기준</b>같은 단지 · 전용면적형(㎡ 정수 기준)별 역대 최고 거래 · 해제 신고 제외 · 자료: 국토교통부 실거래가 공개시스템
+    </footer>
+</div>
+<script src="card.js?v=1"></script>
+</body>
+</html>
