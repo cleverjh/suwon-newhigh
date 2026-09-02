@@ -19,7 +19,7 @@ on:
         type: boolean
         default: true
       dry_run:
-        description: '[dry_run] 등록 버튼 누르기 직전까지만 — 미리보기·스크린샷 확인용'
+        description: '[dry_run] 게시 리허설 — 데이터는 그대로 두고 등록 직전까지만 진행'
         type: boolean
         default: false
 
@@ -77,7 +77,7 @@ jobs:
 
       # ── 정기: 최근 데이터 조회 + 신고가 탐지 + 리포트 생성 ──────
       - name: 신고가 데이터 갱신
-        if: inputs.backfill != true
+        if: inputs.backfill != true && inputs.dry_run != true
         id: update
         run: node scripts/update.js
 
@@ -105,21 +105,21 @@ jobs:
 
       # ── 새 신고가가 있을 때만 게시글 생성 후 아파트너 게시 ───────
       - name: 게시글 생성
-        if: steps.update.outputs.should_post == 'true' && inputs.post != false
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true) && inputs.post != false
         run: node scripts/make-post.js
 
       - name: Playwright 설치
-        if: steps.update.outputs.should_post == 'true' && inputs.post != false
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true) && inputs.post != false
         run: |
           npm install
           npx playwright install --with-deps chromium
 
       - name: 이미지 카드 생성
-        if: steps.update.outputs.should_post == 'true' && inputs.post != false
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true) && inputs.post != false
         run: node scripts/render-image.js
 
       - name: 아파트너 게시
-        if: steps.update.outputs.should_post == 'true' && inputs.post != false && env.APTNER_ID != ''
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true) && inputs.post != false && env.APTNER_ID != ''
         env:
           DRY_RUN: ${{ inputs.dry_run == true && '1' || '' }}
         run: node scripts/post-aptner.js
