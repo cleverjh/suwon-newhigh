@@ -360,6 +360,17 @@ async function main() {
       const nameOnPage = async () =>
         page.evaluate((n) => document.body.innerText.includes(n), imgName).catch(() => false);
 
+      // 본문을 innerText 로 덮어쓰면 Summernote 가 기억하던 커서 위치(range)가 무효가 된다.
+      // 그 상태에서는 이미지 삽입이 조용히 실패하므로, 에디터를 클릭해 커서를 끝으로 보내둔다.
+      try {
+        const edLoc = page.locator('.note-editable').first();
+        if (await edLoc.count()) {
+          await edLoc.click();
+          await page.keyboard.press('Control+End');
+          await page.waitForTimeout(300);
+        }
+      } catch { /* 커서 이동 실패해도 아래 경로들로 계속 시도 */ }
+
       const baseImgCount = await editorImgCount();
 
       // 어떤 file input들이 있는지 먼저 남긴다 (실패 시 셀렉터 판단 근거)
