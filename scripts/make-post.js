@@ -105,7 +105,9 @@ if (report.ourApt) {
   lines.push('[우리 단지 면적형별 신고가 · 역대 최고]');
   if (o.records && o.records.length > 0) {
     for (const r of o.records) {
-      lines.push(`· ${r.areaType}형 ${formatMan(r.max)} (${fmtArea(r.area)}㎡/${r.floor}층) ${fmtDate(r.date)} 계약`);
+      // 최고가가 몇 년 전 기록일 수 있어, 넘지 못한 직전 실거래가를 함께 적는다
+      const last = r.last ? ` / 직전 ${formatMan(r.last.man)}(${fmtDate(r.last.date)})` : '';
+      lines.push(`· ${r.areaType}형 ${formatMan(r.max)} (${fmtArea(r.area)}㎡/${r.floor}층) ${fmtDate(r.date)} 계약${last}`);
     }
   } else {
     lines.push('· 데이터 없음');
@@ -119,7 +121,10 @@ if (report.neighbors && report.neighbors.length > 0) {
   lines.push(`🏘 인근 단지 신고가${umd ? ` (${umd})` : ''}`);
   for (const n of report.neighbors) {
     const recs = n.records
-      .map((r) => `${r.areaType}형 ${formatMan(r.max)}(${fmtDate(r.date)})`)
+      .map((r) => {
+        const base = `${r.areaType}형 ${formatMan(r.max)}(${fmtDate(r.date)})`;
+        return r.last ? `${base}·직전 ${formatMan(r.last.man)}` : base;
+      })
       .join(' / ');
     lines.push(`· ${n.apt}: ${recs}`);
   }

@@ -3,7 +3,9 @@
 /** 핵심 로직 단위 테스트: node scripts/test.js */
 
 const assert = require('assert');
-const { formatMan, parseItem, tradeKey, announceKey } = require('./lib');
+const {
+  formatMan, parseItem, tradeKey, announceKey, lastTradeIndex, lastBelowMax,
+} = require('./lib');
 
 // 1) 가격 포맷
 assert.strictEqual(formatMan(150000), '15억');
@@ -79,6 +81,32 @@ assert.deepStrictEqual(picked, [84, 59, 128], '주력 평형(84/59)이 대형보
 
 // 7) fetch 재시도: 일시적 실패 후 성공하면 결과를 돌려준다
 const { fetchWithRetry } = require('./lib');
+// N) 직전 실거래 표기 — 최고가가 오래된 기록일 때 지금 시세를 함께 보여주기 위한 것
+{
+  const trades = [
+    { areaType: 84, amountMan: 100000, date: '2021-10-11', area: 84.9, floor: 10 },
+    { areaType: 84, amountMan: 87000, date: '2026-08-14', area: 84.8, floor: 29 },
+    { areaType: 84, amountMan: 85000, date: '2026-05-02', area: 84.8, floor: 4 },
+    { areaType: 59, amountMan: 76000, date: '2026-07-21', area: 59.9, floor: 31 },
+  ];
+  const byType = lastTradeIndex(trades, (t) => t.areaType);
+
+  // 가장 최근 거래를 고른다 (배열 순서가 아니라 계약일 기준)
+  assert.strictEqual(byType.get(84).man, 87000);
+  assert.strictEqual(byType.get(84).date, '2026-08-14');
+
+  // 최고가(10억)를 넘지 못한 직전 거래(8억7천)는 표기 대상
+  const shown = lastBelowMax(byType.get(84), 100000);
+  assert.strictEqual(shown.man, 87000);
+  assert.strictEqual(shown.date, '2026-08-14');
+
+  // 직전 거래가 곧 최고가면(=신고가) 같은 값을 두 번 적게 되므로 표기하지 않는다
+  assert.strictEqual(lastBelowMax(byType.get(59), 76000), null);
+
+  // 거래 이력이 없는 면적형은 표기 생략
+  assert.strictEqual(lastBelowMax(byType.get(110), 111000), null);
+}
+
 (async () => {
   const realFetch = globalThis.fetch;
   let calls = 0;

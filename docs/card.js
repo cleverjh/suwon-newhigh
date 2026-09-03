@@ -54,10 +54,10 @@ function buildCompareBlock(report, areaType) {
     const ourMax = ourRec ? ourRec.max : 0;
 
     const entries = [];
-    if (ourRec) entries.push({ name: `우리 단지 (${o.name})`, price: ourMax, ours: true });
+    if (ourRec) entries.push({ name: `우리 단지 (${o.name})`, price: ourMax, last: ourRec.last, ours: true });
     for (const n of report.neighbors || []) {
         const rec = (n.records || []).find((x) => x.areaType === areaType);
-        if (rec) entries.push({ name: n.apt, price: rec.max, ours: false });
+        if (rec) entries.push({ name: n.apt, price: rec.max, last: rec.last, ours: false });
     }
     if (entries.length === 0) return null;
 
@@ -79,7 +79,14 @@ function buildCompareBlock(report, areaType) {
         track.appendChild(fill);
         row.appendChild(track);
 
-        row.appendChild(el('span', `bar-price${e.ours ? ' ours' : ''}`, formatMan(e.price)));
+        // 최고가 아래에 직전 실거래가를 덧붙인다.
+        // 최고가가 몇 년 전 기록인 경우가 많아, 그 값만으로는 지금 시세를 알 수 없기 때문.
+        const priceCell = el('span', `bar-price${e.ours ? ' ours' : ''}`);
+        priceCell.appendChild(el('span', 'bar-max', formatMan(e.price)));
+        if (e.last) {
+            priceCell.appendChild(el('span', 'bar-last', `직전 ${formatMan(e.last.man)}`));
+        }
+        row.appendChild(priceCell);
 
         // 우리 단지 최고가를 기준으로 한 차이
         const d = e.price - ourMax;

@@ -35,6 +35,12 @@ function setText(id, text) {
     if (e) e.textContent = text;
 }
 
+/* 최고가만 적으면 몇 년 전 기록일 수 있어, 최고가를 넘지 못한 직전 실거래가를 덧붙인다 */
+function appendLastTrade(row, last) {
+    if (!last) return;
+    row.appendChild(el('span', 'mini-last', `직전 ${formatMan(last.man)} (${fmtDate(last.date)})`));
+}
+
 function el(tag, cls, text) {
     const e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -98,6 +104,7 @@ function renderOurApt(report) {
             const row = el('div', 'mini-row');
             row.appendChild(el('span', 'mini-label', `${r.areaType}형 (${fmtArea(r.area)}㎡/${r.floor}층)`));
             row.appendChild(el('span', 'mini-price strong', formatMan(r.max)));
+            appendLastTrade(row, r.last);
             row.appendChild(el('span', 'mini-date', `${fmtDate(r.date)} 계약`));
             body.appendChild(row);
         }
@@ -124,6 +131,7 @@ function renderNeighbors(report) {
             const row = el('div', 'mini-row');
             row.appendChild(el('span', 'mini-label', `${r.areaType}형 (${fmtArea(r.area)}㎡/${r.floor}층)`));
             row.appendChild(el('span', 'mini-price', formatMan(r.max)));
+            appendLastTrade(row, r.last);
             row.appendChild(el('span', 'mini-date', `${fmtDate(r.date)} 계약`));
             wrap.appendChild(row);
         }

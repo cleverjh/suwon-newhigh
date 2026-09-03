@@ -19,6 +19,8 @@ const {
   recentMonths,
   fetchMonth,
   tradeKey,
+  lastTradeIndex,
+  lastBelowMax,
   announceKey,
   loadJson,
   saveJson,
@@ -151,11 +153,22 @@ async function main() {
     return { name: d.name, items };
   }).filter((d) => d.items.length > 0);
 
+  // 면적형별 '직전 실거래' 색인.
+  // 역대 최고가가 몇 년 전 기록이면 그 값만으로는 지금 시세를 알 수 없다.
+  // 최고가를 넘지 못해 신고가로 잡히지 않은 최근 거래도 함께 보여주기 위한 것.
+  // 우리 아파트는 전체 거래 이력이 있어 항상 직전 거래를 알 수 있다.
+  const ourLastByType = lastTradeIndex(ourTrades.trades, (t) => t.areaType);
+  // 인근 단지는 이번에 조회한 최근 몇 개월치 안에서만 알 수 있다 (없으면 표기 생략).
+  const neighborLastByKey = lastTradeIndex(valid, (t) => tradeKey(t));
+
   // 4) 우리 아파트 섹션: 최근 거래 + 면적형별 역대 최고가
   const ourAllRecords = dbRecords(maxDb)
     .filter((r) => r.lawdCd === cfg.ourApt.lawdCd && matchesName(r.apt, cfg.ourApt.match))
     .sort((a, b) => a.areaType - b.areaType)
-    .map((r) => ({ areaType: r.areaType, max: r.max, date: r.date, area: r.area, floor: r.floor }));
+    .map((r) => ({
+      areaType: r.areaType, max: r.max, date: r.date, area: r.area, floor: r.floor,
+      last: lastBelowMax(ourLastByType.get(r.areaType), r.max),
+    }));
   // 목록에 노출할 면적형은 maxAreaType 이하로 제한 (대형 평형은 거래가 드물어 목록만 길어짐).
   // 비교용 최고가(ourMaxByType)는 전체를 그대로 쓴다.
   const maxAreaType = cfg.ourApt.maxAreaType;
@@ -175,7 +188,10 @@ async function main() {
   const neighborByType = new Map();
   for (const r of neighborEntries) {
     if (!neighborByType.has(r.areaType)) neighborByType.set(r.areaType, []);
-    neighborByType.get(r.areaType).push({ apt: r.apt, max: r.max, date: r.date });
+    neighborByType.get(r.areaType).push({
+      apt: r.apt, max: r.max, date: r.date,
+      last: lastBelowMax(neighborLastByKey.get(tradeKey(r)), r.max),
+    });
   }
   const compareCount = cfg.neighbors.compareCount || 2;
   const sameTypeNeighbors = (areaType) =>
@@ -207,7 +223,10 @@ async function main() {
   for (const r of neighborEntries) {
     const k = `${r.lawdCd}|${r.apt}`;
     if (!byComplex.has(k)) byComplex.set(k, { apt: r.apt, umd: r.umd || '', records: [] });
-    byComplex.get(k).records.push({ areaType: r.areaType, max: r.max, date: r.date, area: r.area, floor: r.floor });
+    byComplex.get(k).records.push({
+      areaType: r.areaType, max: r.max, date: r.date, area: r.area, floor: r.floor,
+      last: lastBelowMax(neighborLastByKey.get(tradeKey(r)), r.max),
+    });
   }
   // 우리 아파트 주력 면적형(compareAreaTypes)과 가까운 순으로 노출해야 비교가 된다.
   // 대형 평형만 뽑히면 59·84형 위주인 우리 아파트와 견줄 수 없기 때문.

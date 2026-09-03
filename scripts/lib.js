@@ -180,6 +180,32 @@ function tradeKey(t) {
   return `${t.lawdCd}|${t.apt}|${t.areaType}`;
 }
 
+/**
+ * 거래 목록을 키별 '가장 최근 거래'로 색인한다.
+ * 역대 최고가만 보면 몇 년 전 기록일 수 있어, 지금 시세를 함께 보여주기 위한 것.
+ */
+function lastTradeIndex(list, keyOf) {
+  const m = new Map();
+  for (const t of list) {
+    const k = keyOf(t);
+    const prev = m.get(k);
+    if (!prev || t.date > prev.date) {
+      m.set(k, { man: t.amountMan, date: t.date, area: t.area, floor: t.floor });
+    }
+  }
+  return m;
+}
+
+/**
+ * 직전 거래가 최고가보다 낮을 때만 표기 대상으로 돌려준다.
+ * 직전 거래가 곧 최고가(=신고가)면 같은 값을 두 번 적게 되므로 null.
+ */
+function lastBelowMax(lastTrade, max) {
+  return lastTrade && lastTrade.man < max
+    ? { man: lastTrade.man, date: lastTrade.date, floor: lastTrade.floor }
+    : null;
+}
+
 /** 개별 거래 고유 키 (중복 게시 방지용) */
 function announceKey(t) {
   return `${tradeKey(t)}|${t.date}|${t.amountMan}|${t.floor}`;
@@ -231,6 +257,8 @@ module.exports = {
   parseItem,
   tradeKey,
   announceKey,
+  lastTradeIndex,
+  lastBelowMax,
   formatMan,
   loadJson,
   saveJson,

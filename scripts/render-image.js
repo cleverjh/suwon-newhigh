@@ -35,9 +35,15 @@ async function main() {
   const cardHtml = fs.readFileSync(path.join(ROOT, 'docs', 'card.html'), 'utf8');
   const cardJs = fs.readFileSync(path.join(ROOT, 'docs', 'card.js'), 'utf8');
 
+  // 카드 HTML의 card.js 참조를 인라인으로 바꾼다.
+  // 캐시 무효화용 ?v= 값이 바뀌어도 계속 맞도록 정규식으로 찾는다.
+  const scriptTag = /<script src="card\.js(?:\?[^"]*)?"><\/script>/;
+  if (!scriptTag.test(cardHtml)) {
+    throw new Error('docs/card.html 에서 card.js 스크립트 태그를 찾지 못했습니다.');
+  }
   const html = cardHtml.replace(
-    '<script src="card.js?v=1"></script>',
-    `<script>window.__REPORT__ = ${JSON.stringify(report)};</script>\n<script>${cardJs}</script>`
+    scriptTag,
+    () => `<script>window.__REPORT__ = ${JSON.stringify(report)};</script>\n<script>${cardJs}</script>`
   );
 
   fs.mkdirSync(path.dirname(OUT_HTML), { recursive: true });

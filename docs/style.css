@@ -120,6 +120,8 @@ body {
 }
 .mini-price.strong { font-size: 17px; }
 .mini-date { flex: none; width: 84px; text-align: right; font-size: 11.5px; color: var(--gray); }
+/* 역대 최고가가 오래된 기록일 수 있어 함께 적는 직전 실거래가 */
+.mini-last { flex: none; font-size: 11.5px; font-weight: 700; color: var(--gray); white-space: nowrap; }
 .mini-empty { padding: 8px 10px; font-size: 13px; color: var(--gray); }
 
 /* 최근 거래 아래 같은 면적형 인근 단지 비교 줄 */

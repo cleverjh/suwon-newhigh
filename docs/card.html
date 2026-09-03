@@ -55,10 +55,16 @@ body { background: #e8e2d6; }
 .bar-fill { display: block; height: 100%; border-radius: 5px; background: #31405f; }
 .bar-fill.ours { background: var(--red); }
 .bar-price {
-    flex: none; width: 86px; text-align: right; font-size: 15px;
+    flex: none; width: 96px; text-align: right; font-size: 15px;
     font-weight: 900; letter-spacing: -0.5px; white-space: nowrap;
 }
 .bar-price.ours { color: var(--red); }
+.bar-max { display: block; }
+/* 최고가만 보면 몇 년 전 기록일 수 있어 직전 실거래가를 함께 적는다 */
+.bar-last {
+    display: block; margin-top: 1px; font-size: 10.5px;
+    font-weight: 700; color: var(--gray); letter-spacing: -0.3px;
+}
 .chip {
     flex: none; min-width: 74px; text-align: center; font-size: 12px; font-weight: 800;
     border-radius: 6px; padding: 4px 6px; white-space: nowrap;
@@ -151,6 +157,6 @@ body { background: #e8e2d6; }
         <b>신고가 기준</b>같은 단지 · 전용면적형(㎡ 정수 기준)별 역대 최고 거래 · 해제 신고 제외 · 자료: 국토교통부 실거래가 공개시스템
     </footer>
 </div>
-<script src="card.js?v=1"></script>
+<script src="card.js?v=2"></script>
 </body>
 </html>
