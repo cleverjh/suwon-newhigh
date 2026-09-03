@@ -155,12 +155,14 @@ async function main() {
       'input[name="id"]',
       'input[name="userId"]',
       'input[name="loginId"]',
+      'input[placeholder*="아이디"]',
       'input[type="email"]',
       'input[placeholder*="아이디"]',
       'input[type="text"]',
     ].filter(Boolean));
     const pwInput = await firstVisible(page, [
       env('APTNER_SEL_PW', ''),
+      'input[name="passwd"]',
       'input[name="password"]',
       'input[name="pw"]',
       'input[placeholder*="비밀번호"]',
@@ -178,11 +180,15 @@ async function main() {
     await pwInput.fill(pw);
     await shot(page, '02-login-filled');
 
+    // 헤더에도 '로그인' 버튼이 있어 텍스트만으로 고르면 엉뚱한 버튼을 누른다.
+    // 폼 안의 전체 너비 버튼(btn-block)을 먼저 찾는다.
     const loginBtn = await firstVisible(page, [
       env('APTNER_SEL_LOGIN', ''),
+      'button.btn-block.btn-apt.btn-login',
+      'button.btn-block.btn-login',
       'button[type="submit"]',
+      'form button:has-text("로그인")',
       'button:has-text("로그인")',
-      'a:has-text("로그인")',
       'input[type="submit"]',
     ].filter(Boolean));
     if (!loginBtn) {
@@ -191,12 +197,37 @@ async function main() {
     }
     await loginBtn.click();
     await page.waitForLoadState('networkidle').catch(() => {});
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2500);
+
+    // 버튼 클릭이 먹지 않았으면 비밀번호 칸에서 Enter로 한 번 더 시도
+    if (page.url().includes('/sign/in')) {
+      console.log('로그인 화면 유지 → 비밀번호 칸에서 Enter 재시도');
+      await pwInput.press('Enter').catch(() => {});
+      await page.waitForLoadState('networkidle').catch(() => {});
+      await page.waitForTimeout(2500);
+    }
+
+    // 로그인 직후 뜨는 '비밀번호 변경' 안내는 나중으로 미루고 넘어간다
+    const laterBtn = await firstVisible(page, [
+      'button:has-text("3개월 후 변경")',
+      'button.btn-change-next',
+      'button:has-text("다음에 변경")',
+      'button:has-text("나중에")',
+    ]);
+    if (laterBtn) {
+      console.log('비밀번호 변경 안내창 → 나중에 변경 선택');
+      await laterBtn.click();
+      await page.waitForLoadState('networkidle').catch(() => {});
+      await page.waitForTimeout(1500);
+    }
+
     await shot(page, '03-after-login');
     console.log('로그인 후 URL:', page.url());
     if (page.url().includes('/sign/in')) {
       await dumpPageStructure(page, '로그인 실패 추정');
-      throw new Error('로그인 후에도 로그인 화면에 머물러 있습니다. 아이디·비밀번호를 확인하세요.');
+      throw new Error(
+        '로그인 후에도 로그인 화면에 머물러 있습니다. 아이디·비밀번호(APTNER_ID/APTNER_PW)를 확인하세요.'
+      );
     }
 
     // 2) 글쓰기 페이지 이동
