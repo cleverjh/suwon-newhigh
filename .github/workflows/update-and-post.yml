@@ -52,7 +52,7 @@ jobs:
             echo "|---|---|---|"
             echo "| backfill (과거 데이터 백필) | \`${{ inputs.backfill }}\` | ${{ inputs.backfill == true && '✅ 실행' || '⏭️ 건너뜀' }} |"
             echo "| reset (최고가 DB 초기화) | \`${{ inputs.reset }}\` | ${{ (inputs.backfill == true && inputs.reset == true) && '✅ 실행' || '⏭️ 건너뜀' }} |"
-            echo "| post (아파트너 게시) | \`${{ inputs.post }}\` | ${{ inputs.post != false && '조건부' || '⏭️ 건너뜀' }} |"
+            echo "| post (아파트너 게시) | \`${{ inputs.post }}\` | ${{ (github.event_name != 'workflow_dispatch' || inputs.post != false) && '조건부' || '⏭️ 건너뜀' }} |"
             echo "| dry_run (등록 직전까지) | \`${{ inputs.dry_run }}\` | ${{ inputs.dry_run == true && '✅ 적용' || '- ' }} |"
             echo "| force_post (현재 리포트 그대로 게시) | \`${{ inputs.force_post }}\` | ${{ inputs.force_post == true && '✅ 실제 등록' || '- ' }} |"
             echo ""
@@ -110,21 +110,21 @@ jobs:
 
       # ── 새 신고가가 있을 때만 게시글 생성 후 아파트너 게시 ───────
       - name: 게시글 생성
-        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && inputs.post != false
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && (github.event_name != 'workflow_dispatch' || inputs.post != false)
         run: node scripts/make-post.js
 
       - name: Playwright 설치
-        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && inputs.post != false
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && (github.event_name != 'workflow_dispatch' || inputs.post != false)
         run: |
           npm install
           npx playwright install --with-deps chromium
 
       - name: 이미지 카드 생성
-        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && inputs.post != false
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && (github.event_name != 'workflow_dispatch' || inputs.post != false)
         run: node scripts/render-image.js
 
       - name: 아파트너 게시
-        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && inputs.post != false && env.APTNER_ID != ''
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && (github.event_name != 'workflow_dispatch' || inputs.post != false) && env.APTNER_ID != ''
         env:
           DRY_RUN: ${{ inputs.dry_run == true && '1' || '' }}
         run: node scripts/post-aptner.js
