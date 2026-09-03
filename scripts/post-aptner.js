@@ -500,6 +500,8 @@ async function main() {
     // 목록으로 돌아가는 '취소'나 상단 메뉴를 누르지 않도록 정확한 문구부터 시도한다.
     const submitBtn = await firstVisible(page, [
       env('APTNER_SEL_SUBMIT', ''),
+      // 아파트너 글쓰기 폼의 실제 제출 버튼 (문구는 '등록'이 아니라 '저장')
+      'button.btn-save',
       'button:has-text("등록")',
       'a:has-text("등록")',
       'button:has-text("작성완료")',
