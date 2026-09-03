@@ -236,41 +236,36 @@ async function main() {
     await page.waitForTimeout(2000);
     await shot(page, '04-write-page');
 
-    // 목록 페이지가 열렸다면 '글쓰기' 버튼을 눌러 작성 화면으로 이동
-    const titleSelectors = [
-      env('APTNER_SEL_TITLE', ''),
-      'input[name="title"]',
-      'input[placeholder*="제목"]',
-      'input[type="text"]',
-    ].filter(Boolean);
-
-    if (!(await firstVisible(page, titleSelectors))) {
-      const writeBtn = await firstVisible(page, [
-        env('APTNER_SEL_WRITE_BTN', ''),
-        'a:has-text("글쓰기")',
-        'button:has-text("글쓰기")',
-        'a:has-text("글 쓰기")',
-        'button:has-text("글 쓰기")',
-        'a:has-text("작성하기")',
-        'button:has-text("작성하기")',
-        '[class*="write"]',
-      ].filter(Boolean));
-      if (writeBtn) {
-        console.log('목록 페이지로 판단 → 글쓰기 버튼 클릭');
-        await writeBtn.click();
-        await page.waitForLoadState('networkidle').catch(() => {});
-        await page.waitForTimeout(2000);
-        console.log('글쓰기 화면 URL:', page.url());
-        await shot(page, '04b-after-write-btn');
-      }
+    // 목록 페이지라면 '글작성' 버튼을 눌러 작성 화면으로 들어간다.
+    // 제목 입력창 유무로 판단하면 목록의 검색창을 제목으로 오인하므로,
+    // 글쓰기 버튼이 보이면 먼저 누른다.
+    const writeBtn = await firstVisible(page, [
+      env('APTNER_SEL_WRITE_BTN', ''),
+      'button.btn-write',
+      'a.btn-write',
+      'button:has-text("글작성")',
+      'a:has-text("글작성")',
+      'button:has-text("글쓰기")',
+      'a:has-text("글쓰기")',
+      'button:has-text("작성하기")',
+      'a:has-text("작성하기")',
+    ].filter(Boolean));
+    if (writeBtn) {
+      console.log('목록 페이지 → 글작성 버튼 클릭');
+      await writeBtn.click();
+      await page.waitForLoadState('networkidle').catch(() => {});
+      await page.waitForTimeout(2500);
+      console.log('작성 화면 URL:', page.url());
+      await shot(page, '04b-write-form');
     }
 
-    // 3) 제목/본문 입력
+    // 3) 제목/본문 입력 (목록 검색창 name=keyword 는 제목 후보에서 제외)
     const titleInput = await firstVisible(page, [
       env('APTNER_SEL_TITLE', ''),
       'input[name="title"]',
+      'input[name="subject"]',
       'input[placeholder*="제목"]',
-      'input[type="text"]',
+      'input[type="text"]:not([name="keyword"]):not([placeholder*="검색"])',
     ].filter(Boolean));
     if (!titleInput) {
       await dumpPageStructure(page, '글쓰기 페이지');
