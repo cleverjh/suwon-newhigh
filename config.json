@@ -24,6 +24,8 @@
   "ourRecentTradeCount": 3,
   "post": {
     "bodyMode": "image",
-    "bodyModeComment": "image = 이미지 카드 한 장 위주(본문은 안내 몇 줄만), full = 본문에 전체 목록을 텍스트로"
+    "bodyModeComment": "image = 이미지 카드 한 장 위주(본문은 안내 몇 줄만), full = 본문에 전체 목록을 텍스트로",
+    "category": "자유게시판",
+    "categoryComment": "글을 올릴 게시판 분류 이름. 빈 문자열이면 분류를 선택하지 않음"
   }
 }

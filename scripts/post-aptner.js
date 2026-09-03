@@ -36,7 +36,7 @@
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
-const { PATHS } = require('./lib');
+const { PATHS, loadConfig } = require('./lib');
 
 const SHOTS = path.join(__dirname, '..', 'out', 'shots');
 
@@ -262,7 +262,8 @@ async function main() {
     }
 
     // 분류(카테고리)가 필수인 게시판이 있어 지정된 분류를 먼저 고른다
-    const category = process.env.APTNER_CATEGORY;
+    const cfg = loadConfig();
+    const category = process.env.APTNER_CATEGORY || (cfg.post && cfg.post.category) || '';
     if (category) {
       const catBtn = await firstVisible(page, [
         `button.btn-category:has-text("${category}")`,
@@ -340,13 +341,40 @@ async function main() {
     if (fs.existsSync(imgPath)) {
       const fileSel = env('APTNER_SEL_FILE', 'input[type="file"]');
       const fileCount = await page.locator(fileSel).count().catch(() => 0);
-      console.log(`파일 입력 요소 ${fileCount}개 발견`);
+      const imgName = path.basename(imgPath);
+
+      // 첨부가 화면에 반영됐는지(파일명이 표시되는지)로 성공을 판정한다.
+      // setInputFiles 자체는 값만 넣으므로, 커스텀 업로더가 받아가지 않으면 화면은 그대로다.
+      const attachedOnPage = async () => {
+        try {
+          return await page.evaluate((n) => document.body.innerText.includes(n), imgName);
+        } catch {
+          return false;
+        }
+      };
+
+      // 어떤 file input들이 있는지 먼저 남긴다 (실패 시 셀렉터 판단 근거)
+      const inputs = await page.evaluate((sel) =>
+        [...document.querySelectorAll(sel)].map((e) => ({
+          name: e.getAttribute('name') || '', id: e.id || '',
+          accept: e.getAttribute('accept') || '',
+          cls: (e.className || '').toString().slice(0, 50),
+        })), fileSel).catch(() => []);
+      console.log(`파일 입력 요소 ${fileCount}개:`);
+      for (const [i, f] of inputs.entries()) {
+        console.log(`  #${i + 1} name=${f.name} id=${f.id} accept=${f.accept} class=${f.cls}`);
+      }
 
       for (let i = 0; i < fileCount && !attached; i++) {
         try {
           await page.locator(fileSel).nth(i).setInputFiles(imgPath, { timeout: 5000 });
-          attached = true;
-          console.log(`이미지 첨부 완료 (input #${i + 1})`);
+          await page.waitForTimeout(3000); // 업로드·목록 갱신 대기
+          if (await attachedOnPage()) {
+            attached = true;
+            console.log(`이미지 첨부 확인됨 (input #${i + 1})`);
+          } else {
+            console.log(`  input #${i + 1}: 값은 넣었으나 화면에 반영되지 않음 → 다음 후보 시도`);
+          }
         } catch (err) {
           console.log(`  input #${i + 1} 첨부 실패: ${err.message.split('\n')[0]}`);
         }
@@ -368,17 +396,18 @@ async function main() {
               pickBtn.click(),
             ]);
             await chooser.setFiles(imgPath);
-            attached = true;
-            console.log('이미지 첨부 완료 (파일 선택창 경유)');
+            await page.waitForTimeout(3000);
+            attached = await attachedOnPage();
+            console.log(attached
+              ? '이미지 첨부 확인됨 (파일 선택창 경유)'
+              : '파일 선택창으로 넣었으나 화면에 반영되지 않음');
           } catch (err) {
             console.warn('파일 선택창 처리 실패:', err.message.split('\n')[0]);
           }
         }
       }
 
-      if (attached) {
-        await page.waitForTimeout(4000); // 업로드 완료 대기
-      } else {
+      if (!attached) {
         await dumpPageStructure(page, '이미지 첨부 실패');
         console.warn('이미지를 첨부하지 못했습니다. 글은 텍스트만으로 작성됩니다.');
       }
