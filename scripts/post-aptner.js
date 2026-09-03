@@ -25,6 +25,8 @@
  *   APTNER_SEL_TITLE   제목 입력창 셀렉터
  *   APTNER_SEL_BODY    본문 입력 영역 셀렉터
  *   APTNER_SEL_SUBMIT  등록 버튼 셀렉터
+ *   APTNER_SEL_FILE    파일 입력(input[type=file]) 셀렉터
+ *   APTNER_CATEGORY    글 분류 이름 (예: 자유게시판). 미지정 시 분류를 건드리지 않음
  *   DRY_RUN=1          등록 버튼을 누르기 직전까지만 실행(스크린샷 확인용)
  *
  * 실행 단계마다 out/shots/ 에 스크린샷을 남기므로,
@@ -259,6 +261,24 @@ async function main() {
       await shot(page, '04b-write-form');
     }
 
+    // 분류(카테고리)가 필수인 게시판이 있어 지정된 분류를 먼저 고른다
+    const category = process.env.APTNER_CATEGORY;
+    if (category) {
+      const catBtn = await firstVisible(page, [
+        `button.btn-category:has-text("${category}")`,
+        `button:has-text("${category}")`,
+        `label:has-text("${category}")`,
+        `a:has-text("${category}")`,
+      ]);
+      if (catBtn) {
+        console.log(`분류 선택: ${category}`);
+        await catBtn.click();
+        await page.waitForTimeout(800);
+      } else {
+        console.warn(`분류 '${category}' 버튼을 찾지 못했습니다. 분류 없이 진행합니다.`);
+      }
+    }
+
     // 3) 제목/본문 입력 (목록 검색창 name=keyword 는 제목 후보에서 제외)
     const titleInput = await firstVisible(page, [
       env('APTNER_SEL_TITLE', ''),
@@ -312,19 +332,59 @@ async function main() {
       throw new Error('본문 입력 영역을 찾지 못했습니다. APTNER_SEL_BODY를 설정하세요.');
     }
 
-    // 이미지 카드 첨부 (out/post-image.png가 있으면)
+    // 이미지 카드 첨부 (out/post-image.png)
+    // 아파트너는 '파일 찾기'가 커스텀 버튼이고 실제 input[type=file]은 숨겨져 있어,
+    // ① 숨은 input에 직접 파일을 넣어보고 ② 안 되면 버튼을 눌러 파일 선택창을 가로챈다.
     const imgPath = path.join(__dirname, '..', 'out', 'post-image.png');
+    let attached = false;
     if (fs.existsSync(imgPath)) {
-      try {
-        const fileInput = page.locator(env('APTNER_SEL_FILE', 'input[type="file"]')).first();
-        await fileInput.setInputFiles(imgPath, { timeout: 8000 });
-        await page.waitForTimeout(3000); // 업로드 완료 대기
-        console.log('이미지 카드 첨부 완료.');
-      } catch {
-        console.warn('파일 첨부 입력을 찾지 못해 텍스트만 게시합니다. (APTNER_SEL_FILE 셀렉터로 지정 가능)');
+      const fileSel = env('APTNER_SEL_FILE', 'input[type="file"]');
+      const fileCount = await page.locator(fileSel).count().catch(() => 0);
+      console.log(`파일 입력 요소 ${fileCount}개 발견`);
+
+      for (let i = 0; i < fileCount && !attached; i++) {
+        try {
+          await page.locator(fileSel).nth(i).setInputFiles(imgPath, { timeout: 5000 });
+          attached = true;
+          console.log(`이미지 첨부 완료 (input #${i + 1})`);
+        } catch (err) {
+          console.log(`  input #${i + 1} 첨부 실패: ${err.message.split('\n')[0]}`);
+        }
+      }
+
+      if (!attached) {
+        // '파일 찾기' 버튼을 눌러 열리는 파일 선택창을 받아서 지정
+        const pickBtn = await firstVisible(page, [
+          'button:has-text("파일 찾기")',
+          'a:has-text("파일 찾기")',
+          'label:has-text("파일 찾기")',
+          'button:has-text("파일첨부")',
+          '[class*="file"]',
+        ]);
+        if (pickBtn) {
+          try {
+            const [chooser] = await Promise.all([
+              page.waitForEvent('filechooser', { timeout: 8000 }),
+              pickBtn.click(),
+            ]);
+            await chooser.setFiles(imgPath);
+            attached = true;
+            console.log('이미지 첨부 완료 (파일 선택창 경유)');
+          } catch (err) {
+            console.warn('파일 선택창 처리 실패:', err.message.split('\n')[0]);
+          }
+        }
+      }
+
+      if (attached) {
+        await page.waitForTimeout(4000); // 업로드 완료 대기
+      } else {
+        await dumpPageStructure(page, '이미지 첨부 실패');
+        console.warn('이미지를 첨부하지 못했습니다. 글은 텍스트만으로 작성됩니다.');
       }
     }
     await shot(page, '05-form-filled');
+    console.log(`작성 상태 — 제목/본문 입력 완료, 이미지 첨부 ${attached ? '성공' : '실패'}`);
 
     // 4) 등록
     if (process.env.DRY_RUN === '1') {
