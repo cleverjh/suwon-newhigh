@@ -59,21 +59,30 @@ async function dumpPageStructure(page, label) {
   const describe = async (frame, tag) => {
     try {
       const items = await frame.evaluate(() => {
+        const sel = 'input, textarea, select, button, a, div[contenteditable="true"]';
         const out = [];
-        for (const e of document.querySelectorAll('input, textarea, select, button, a[role="button"], div[contenteditable="true"]')) {
+        for (const e of document.querySelectorAll(sel)) {
+          const cls = (e.className || '').toString();
+          // 에디터 색상 팔레트는 수십 개라 목록을 가득 채워 정작 필요한 버튼이 잘린다
+          if (/note-color-btn|note-color-reset/.test(cls)) continue;
           const r = e.getBoundingClientRect();
+          const text = (e.innerText || e.value || '').trim().slice(0, 24);
+          // 글자도 이름도 없는 링크는 아이콘·앵커라 진단에 도움이 안 된다
+          if (e.tagName === 'A' && !text) continue;
           out.push({
             tag: e.tagName.toLowerCase(),
             type: e.getAttribute('type') || '',
             name: e.getAttribute('name') || '',
             id: e.id || '',
-            cls: (e.className || '').toString().slice(0, 60),
+            cls: cls.slice(0, 60),
             ph: e.getAttribute('placeholder') || '',
-            text: (e.innerText || e.value || '').trim().slice(0, 24),
+            text,
             visible: r.width > 0 && r.height > 0,
           });
         }
-        return out.slice(0, 40);
+        // 화면에 보이는 것부터 — 잘리더라도 조작 대상이 먼저 남도록
+        out.sort((a, b) => (b.visible ? 1 : 0) - (a.visible ? 1 : 0));
+        return out.slice(0, 80);
       });
       if (items.length === 0) return;
       console.log(`--- ${tag} (${items.length}개) ---`);
@@ -487,24 +496,50 @@ async function main() {
     console.log(`작성 상태 — 제목/본문 입력 완료, 이미지 첨부 ${attached ? '성공' : '실패'}`);
 
     // 4) 등록
-    if (process.env.DRY_RUN === '1') {
-      console.log('DRY_RUN=1 → 등록 버튼 클릭 없이 종료합니다. 05-form-filled.png 를 확인하세요.');
-      return;
-    }
+    // 아파트너의 등록은 <button> 이 아니라 <a> 일 수 있어 링크 후보도 함께 본다.
+    // 목록으로 돌아가는 '취소'나 상단 메뉴를 누르지 않도록 정확한 문구부터 시도한다.
     const submitBtn = await firstVisible(page, [
       env('APTNER_SEL_SUBMIT', ''),
       'button:has-text("등록")',
-      'button:has-text("작성")',
-      'button:has-text("완료")',
+      'a:has-text("등록")',
+      'button:has-text("작성완료")',
+      'a:has-text("작성완료")',
+      'button:has-text("저장")',
+      'a:has-text("저장")',
       'button[type="submit"]',
+      'button:has-text("완료")',
+      'a:has-text("완료")',
     ].filter(Boolean));
+    // 어떤 요소를 누르게 되는지 남긴다 (엉뚱한 링크를 눌렀는지 로그로 판별하기 위함)
+    if (submitBtn) {
+      const desc = await submitBtn
+        .evaluate((el) =>
+          `<${el.tagName.toLowerCase()} class="${(el.className || '').toString().slice(0, 60)}"> ` +
+          `${(el.innerText || el.value || '').trim().slice(0, 20)}`)
+        .catch(() => '(설명 조회 실패)');
+      console.log('등록 버튼:', desc);
+    }
+
+    // 리허설에서도 등록 버튼을 찾을 수 있는지까지 확인하고 멈춘다 (누르지는 않는다)
+    if (process.env.DRY_RUN === '1') {
+      if (!submitBtn) await dumpPageStructure(page, '등록 버튼 탐색');
+      console.log(
+        submitBtn
+          ? 'DRY_RUN=1 → 등록 버튼까지 확인했고, 누르지 않고 종료합니다. 05-form-filled.png 를 확인하세요.'
+          : 'DRY_RUN=1 → 등록 버튼을 찾지 못했습니다. 위 진단을 보고 APTNER_SEL_SUBMIT을 설정하세요.'
+      );
+      return;
+    }
+
     if (!submitBtn) {
       await dumpPageStructure(page, '등록 버튼 탐색');
       throw new Error('등록 버튼을 찾지 못했습니다. APTNER_SEL_SUBMIT을 설정하세요.');
     }
     await submitBtn.click();
     await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForTimeout(2000);
     await shot(page, '06-after-submit');
+    console.log('등록 후 URL:', page.url());
     console.log('아파트너 게시 완료.');
   } catch (err) {
     await shot(page, '99-error').catch(() => {});
