@@ -48,6 +48,24 @@ async function shot(page, name) {
 }
 
 /**
+ * 목록 화면에 이 제목의 글이 보이는지 확인한다.
+ * 이모지·공백은 목록에서 다르게 그려질 수 있어 떼고 비교한다.
+ */
+function titleNeedle(title) {
+  return title.replace(/[^\p{L}\p{N}]/gu, '');
+}
+
+async function listHasTitle(page, listUrl, title) {
+  const needle = titleNeedle(title);
+  await page.goto(listUrl, { waitUntil: 'domcontentloaded' });
+  await page.waitForLoadState('networkidle').catch(() => {});
+  await page.waitForTimeout(1500);
+  return page
+    .evaluate((n) => document.body.innerText.replace(/[^\p{L}\p{N}]/gu, '').includes(n), needle)
+    .catch(() => false);
+}
+
+/**
  * 셀렉터를 못 찾았을 때 페이지 구조를 로그로 남긴다.
  * 아티팩트를 열어보지 않고도 로그만으로 올바른 셀렉터를 찾을 수 있게 하기 위함.
  */
@@ -242,6 +260,13 @@ async function main() {
     }
 
     // 2) 글쓰기 페이지 이동
+    // 같은 제목의 글이 이미 있으면 다시 올리지 않는다.
+    // 등록이 됐는지 불확실해 재실행할 때 같은 글이 두 번 올라가는 걸 막는다.
+    if (await listHasTitle(page, writeUrl, title)) {
+      console.log(`이미 같은 제목의 글이 게시판에 있습니다 — 중복 게시하지 않고 종료합니다.\n  ${title}`);
+      return;
+    }
+
     await page.goto(writeUrl, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle').catch(() => {});
     await page.waitForTimeout(2000);
@@ -539,10 +564,38 @@ async function main() {
     }
     await submitBtn.click();
     await page.waitForLoadState('networkidle').catch(() => {});
-    await page.waitForTimeout(2000);
+
+    // '등록하시겠습니까?' 같은 확인창이 뜨는 경우가 있어 한 번 받아준다
+    const confirmBtn = await firstVisible(page, [
+      '.modal.show button:has-text("확인")',
+      '.modal.show button:has-text("예")',
+      '.swal2-confirm',
+    ]);
+    if (confirmBtn) {
+      console.log('확인창 처리');
+      await confirmBtn.click();
+      await page.waitForLoadState('networkidle').catch(() => {});
+    }
+
+    // 작성 화면을 벗어날 때까지 기다린다 (클릭이 먹지 않아도 예외는 안 나기 때문)
+    await page
+      .waitForFunction(() => !location.pathname.includes('/board/form/'), { timeout: 15000 })
+      .catch(() => {});
+    await page.waitForTimeout(1500);
     await shot(page, '06-after-submit');
     console.log('등록 후 URL:', page.url());
-    console.log('아파트너 게시 완료.');
+
+    // 클릭이 예외를 내지 않았다는 것만으로는 등록됐다고 볼 수 없다.
+    // 목록에 제목이 실제로 보이는지로 판정한다.
+    if (await listHasTitle(page, writeUrl, title)) {
+      console.log('아파트너 게시 완료 — 목록에서 글을 확인했습니다.');
+    } else {
+      await shot(page, '07-verify-failed').catch(() => {});
+      await dumpPageStructure(page, '등록 확인 실패');
+      throw new Error(
+        '저장을 눌렀지만 목록에서 글을 찾지 못했습니다. 등록되지 않았을 가능성이 큽니다.'
+      );
+    }
   } catch (err) {
     await shot(page, '99-error').catch(() => {});
     console.error('아파트너 게시 실패:', err.message);
