@@ -22,6 +22,10 @@ on:
         description: '[dry_run] 게시 리허설 — 데이터는 그대로 두고 등록 직전까지만 진행'
         type: boolean
         default: false
+      force_post:
+        description: '[force_post] 지금 리포트를 그대로 게시 — 새 신고가 탐지 없이 실제 등록'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -50,6 +54,7 @@ jobs:
             echo "| reset (최고가 DB 초기화) | \`${{ inputs.reset }}\` | ${{ (inputs.backfill == true && inputs.reset == true) && '✅ 실행' || '⏭️ 건너뜀' }} |"
             echo "| post (아파트너 게시) | \`${{ inputs.post }}\` | ${{ inputs.post != false && '조건부' || '⏭️ 건너뜀' }} |"
             echo "| dry_run (등록 직전까지) | \`${{ inputs.dry_run }}\` | ${{ inputs.dry_run == true && '✅ 적용' || '- ' }} |"
+            echo "| force_post (현재 리포트 그대로 게시) | \`${{ inputs.force_post }}\` | ${{ inputs.force_post == true && '✅ 실제 등록' || '- ' }} |"
             echo ""
             if [ "${{ inputs.backfill }}" != "true" ]; then
               echo "> 백필을 돌리려면 Run workflow에서 **[backfill]** 체크박스를 켜야 합니다. (DB 재구축은 **[reset]**도 함께)"
@@ -77,7 +82,7 @@ jobs:
 
       # ── 정기: 최근 데이터 조회 + 신고가 탐지 + 리포트 생성 ──────
       - name: 신고가 데이터 갱신
-        if: inputs.backfill != true && inputs.dry_run != true
+        if: inputs.backfill != true && inputs.dry_run != true && inputs.force_post != true
         id: update
         run: node scripts/update.js
 
@@ -105,21 +110,21 @@ jobs:
 
       # ── 새 신고가가 있을 때만 게시글 생성 후 아파트너 게시 ───────
       - name: 게시글 생성
-        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true) && inputs.post != false
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && inputs.post != false
         run: node scripts/make-post.js
 
       - name: Playwright 설치
-        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true) && inputs.post != false
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && inputs.post != false
         run: |
           npm install
           npx playwright install --with-deps chromium
 
       - name: 이미지 카드 생성
-        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true) && inputs.post != false
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && inputs.post != false
         run: node scripts/render-image.js
 
       - name: 아파트너 게시
-        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true) && inputs.post != false && env.APTNER_ID != ''
+        if: (steps.update.outputs.should_post == 'true' || inputs.dry_run == true || inputs.force_post == true) && inputs.post != false && env.APTNER_ID != ''
         env:
           DRY_RUN: ${{ inputs.dry_run == true && '1' || '' }}
         run: node scripts/post-aptner.js
