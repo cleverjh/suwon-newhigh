@@ -6,13 +6,19 @@
  * 아파트너는 공개 API가 없어 웹 자동화로 게시한다.
  * 로그인 → 게시판 글쓰기 페이지 이동 → 제목/본문 입력 → 등록.
  *
+ * 아파트너는 단지별 서브도메인을 쓴다 (예: https://skskyview.aptner.com).
+ * APTNER_WRITE_URL 은 글쓰기 페이지 URL이어도 되고 게시판 목록 URL이어도 된다.
+ * 목록 URL이면 페이지에서 '글쓰기' 버튼을 찾아 눌러 작성 화면으로 들어간다.
+ *
  * 필수 환경변수
  *   APTNER_ID        아파트너 로그인 아이디
  *   APTNER_PW        아파트너 비밀번호
- *   APTNER_WRITE_URL 글쓰기 페이지 URL (예: https://www.aptner.com/board/.../write)
+ *   APTNER_WRITE_URL 게시판 목록 또는 글쓰기 URL
+ *                    (예: https://skskyview.aptner.com/v2/board/lists/comm)
  *
  * 선택 환경변수 (사이트 개편 시 셀렉터만 바꿔 대응)
- *   APTNER_LOGIN_URL   기본 https://www.aptner.com/login
+ *   APTNER_LOGIN_URL   미지정 시 APTNER_WRITE_URL과 같은 도메인의 /v2/sign/in 사용
+ *   APTNER_SEL_WRITE_BTN  글쓰기 버튼 셀렉터
  *   APTNER_SEL_ID      아이디 입력창 셀렉터
  *   APTNER_SEL_PW      비밀번호 입력창 셀렉터
  *   APTNER_SEL_LOGIN   로그인 버튼 셀렉터
@@ -124,11 +130,21 @@ async function main() {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   page.setDefaultTimeout(20000);
 
+  // 단지별 서브도메인이므로 로그인 주소를 글쓰기 URL에서 유추한다
+  let loginUrl = process.env.APTNER_LOGIN_URL;
+  if (!loginUrl) {
+    try {
+      loginUrl = `${new URL(writeUrl).origin}/v2/sign/in`;
+    } catch {
+      loginUrl = 'https://www.aptner.com/login';
+    }
+  }
+  console.log('로그인 주소:', loginUrl);
+  console.log('게시판 주소:', writeUrl);
+
   try {
     // 1) 로그인
-    await page.goto(env('APTNER_LOGIN_URL', 'https://www.aptner.com/login'), {
-      waitUntil: 'domcontentloaded',
-    });
+    await page.goto(loginUrl, { waitUntil: 'domcontentloaded' });
     // 로그인 폼이 스크립트로 그려지는 경우가 있어 네트워크가 잠잠해질 때까지 기다린다
     await page.waitForLoadState('networkidle').catch(() => {});
     await page.waitForTimeout(2000);
@@ -175,13 +191,48 @@ async function main() {
     }
     await loginBtn.click();
     await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForTimeout(2000);
     await shot(page, '03-after-login');
+    console.log('로그인 후 URL:', page.url());
+    if (page.url().includes('/sign/in')) {
+      await dumpPageStructure(page, '로그인 실패 추정');
+      throw new Error('로그인 후에도 로그인 화면에 머물러 있습니다. 아이디·비밀번호를 확인하세요.');
+    }
 
     // 2) 글쓰기 페이지 이동
     await page.goto(writeUrl, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle').catch(() => {});
     await page.waitForTimeout(2000);
     await shot(page, '04-write-page');
+
+    // 목록 페이지가 열렸다면 '글쓰기' 버튼을 눌러 작성 화면으로 이동
+    const titleSelectors = [
+      env('APTNER_SEL_TITLE', ''),
+      'input[name="title"]',
+      'input[placeholder*="제목"]',
+      'input[type="text"]',
+    ].filter(Boolean);
+
+    if (!(await firstVisible(page, titleSelectors))) {
+      const writeBtn = await firstVisible(page, [
+        env('APTNER_SEL_WRITE_BTN', ''),
+        'a:has-text("글쓰기")',
+        'button:has-text("글쓰기")',
+        'a:has-text("글 쓰기")',
+        'button:has-text("글 쓰기")',
+        'a:has-text("작성하기")',
+        'button:has-text("작성하기")',
+        '[class*="write"]',
+      ].filter(Boolean));
+      if (writeBtn) {
+        console.log('목록 페이지로 판단 → 글쓰기 버튼 클릭');
+        await writeBtn.click();
+        await page.waitForLoadState('networkidle').catch(() => {});
+        await page.waitForTimeout(2000);
+        console.log('글쓰기 화면 URL:', page.url());
+        await shot(page, '04b-after-write-btn');
+      }
+    }
 
     // 3) 제목/본문 입력
     const titleInput = await firstVisible(page, [
