@@ -20,6 +20,8 @@ const { PATHS, loadJson } = require('./lib');
 const ROOT = path.join(__dirname, '..');
 const OUT_HTML = path.join(ROOT, 'out', 'post-image.html');
 const OUT_PNG = path.join(ROOT, 'out', 'post-image.png');
+// 본문에 data URI 로 직접 넣어야 할 때 쓰는 경량본 (PNG 는 base64 로 바꾸면 너무 커진다)
+const OUT_JPG = path.join(ROOT, 'out', 'post-image.jpg');
 
 async function main() {
   const report = loadJson(PATHS.report, null);
@@ -54,10 +56,11 @@ async function main() {
   await page.evaluate(() => document.fonts.ready).catch(() => {});
   const card = page.locator('#card');
   await card.screenshot({ path: OUT_PNG });
+  await card.screenshot({ path: OUT_JPG, type: 'jpeg', quality: 82 });
   await browser.close();
 
-  const kb = Math.round(fs.statSync(OUT_PNG).size / 1024);
-  console.log(`이미지 생성 완료 → ${OUT_PNG} (${kb}KB)`);
+  const kb = (f) => Math.round(fs.statSync(f).size / 1024);
+  console.log(`이미지 생성 완료 → ${OUT_PNG} (${kb(OUT_PNG)}KB), ${OUT_JPG} (${kb(OUT_JPG)}KB)`);
 }
 
 main().catch((err) => {

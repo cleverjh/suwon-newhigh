@@ -334,24 +334,33 @@ async function main() {
     }
 
     // 이미지 카드 첨부 (out/post-image.png)
-    // 아파트너는 '파일 찾기'가 커스텀 버튼이고 실제 input[type=file]은 숨겨져 있어,
-    // ① 숨은 input에 직접 파일을 넣어보고 ② 안 되면 버튼을 눌러 파일 선택창을 가로챈다.
+    //
+    // 아파트너 글쓰기 에디터는 Summernote 다. 이미지를 넣는 경로가 두 가지다.
+    //   ① 본문 에디터 안에 이미지 삽입 (input.note-image-input, name=files)
+    //      → 화면에는 <img> 로만 보이고 "파일명"은 어디에도 안 나온다.
+    //   ② 하단 '파일첨부' (name=upfile) → 파일명이 목록으로 표시된다.
+    // 예전 판정은 파일명이 화면에 보이는지만 봤기 때문에 ①이 성공해도 실패로 셌다.
+    // 그래서 경로별로 다른 방식으로 확인한다.
     const imgPath = path.join(__dirname, '..', 'out', 'post-image.png');
     let attached = false;
     if (fs.existsSync(imgPath)) {
       const fileSel = env('APTNER_SEL_FILE', 'input[type="file"]');
-      const fileCount = await page.locator(fileSel).count().catch(() => 0);
       const imgName = path.basename(imgPath);
 
-      // 첨부가 화면에 반영됐는지(파일명이 표시되는지)로 성공을 판정한다.
-      // setInputFiles 자체는 값만 넣으므로, 커스텀 업로더가 받아가지 않으면 화면은 그대로다.
-      const attachedOnPage = async () => {
-        try {
-          return await page.evaluate((n) => document.body.innerText.includes(n), imgName);
-        } catch {
-          return false;
-        }
-      };
+      const EDITOR_SEL = '.note-editable, div[contenteditable="true"]';
+
+      // 본문 에디터 안의 이미지 개수 (①의 성공 판정)
+      const editorImgCount = async () =>
+        page.evaluate((sel) => {
+          const ed = document.querySelector(sel);
+          return ed ? ed.querySelectorAll('img').length : 0;
+        }, EDITOR_SEL).catch(() => 0);
+
+      // 첨부 목록에 파일명이 떴는지 (②의 성공 판정)
+      const nameOnPage = async () =>
+        page.evaluate((n) => document.body.innerText.includes(n), imgName).catch(() => false);
+
+      const baseImgCount = await editorImgCount();
 
       // 어떤 file input들이 있는지 먼저 남긴다 (실패 시 셀렉터 판단 근거)
       const inputs = await page.evaluate((sel) =>
@@ -360,23 +369,33 @@ async function main() {
           accept: e.getAttribute('accept') || '',
           cls: (e.className || '').toString().slice(0, 50),
         })), fileSel).catch(() => []);
-      console.log(`파일 입력 요소 ${fileCount}개:`);
+      console.log(`파일 입력 요소 ${inputs.length}개:`);
       for (const [i, f] of inputs.entries()) {
         console.log(`  #${i + 1} name=${f.name} id=${f.id} accept=${f.accept} class=${f.cls}`);
       }
 
-      for (let i = 0; i < fileCount && !attached; i++) {
+      // 본문 삽입용 input(에디터 소속)을 먼저, 그 다음 일반 첨부 input을 시도한다
+      const order = inputs
+        .map((f, i) => ({ ...f, i }))
+        .sort((a, b) => {
+          const score = (f) => (/note-image|accept=image/.test(`${f.cls} accept=${f.accept}`) ? 0 : 1);
+          return score(a) - score(b);
+        });
+
+      for (const f of order) {
+        if (attached) break;
+        const isEditorInput = /note-image/.test(f.cls);
         try {
-          await page.locator(fileSel).nth(i).setInputFiles(imgPath, { timeout: 5000 });
-          await page.waitForTimeout(3000); // 업로드·목록 갱신 대기
-          if (await attachedOnPage()) {
+          await page.locator(fileSel).nth(f.i).setInputFiles(imgPath, { timeout: 5000 });
+          await page.waitForTimeout(3500); // 서버 업로드·목록 갱신 대기
+          if (isEditorInput ? (await editorImgCount()) > baseImgCount : await nameOnPage()) {
             attached = true;
-            console.log(`이미지 첨부 확인됨 (input #${i + 1})`);
+            console.log(`이미지 첨부 확인됨 (input #${f.i + 1} name=${f.name}, ${isEditorInput ? '본문 삽입' : '파일첨부'})`);
           } else {
-            console.log(`  input #${i + 1}: 값은 넣었으나 화면에 반영되지 않음 → 다음 후보 시도`);
+            console.log(`  input #${f.i + 1} (name=${f.name}): 값은 넣었으나 반영되지 않음 → 다음 후보 시도`);
           }
         } catch (err) {
-          console.log(`  input #${i + 1} 첨부 실패: ${err.message.split('\n')[0]}`);
+          console.log(`  input #${f.i + 1} 첨부 실패: ${err.message.split('\n')[0]}`);
         }
       }
 
@@ -387,7 +406,6 @@ async function main() {
           'a:has-text("파일 찾기")',
           'label:has-text("파일 찾기")',
           'button:has-text("파일첨부")',
-          '[class*="file"]',
         ]);
         if (pickBtn) {
           try {
@@ -396,16 +414,58 @@ async function main() {
               pickBtn.click(),
             ]);
             await chooser.setFiles(imgPath);
-            await page.waitForTimeout(3000);
-            attached = await attachedOnPage();
+            await page.waitForTimeout(3500);
+            attached = (await nameOnPage()) || (await editorImgCount()) > baseImgCount;
             console.log(attached
               ? '이미지 첨부 확인됨 (파일 선택창 경유)'
-              : '파일 선택창으로 넣었으나 화면에 반영되지 않음');
+              : '파일 선택창으로 넣었으나 반영되지 않음');
           } catch (err) {
             console.warn('파일 선택창 처리 실패:', err.message.split('\n')[0]);
           }
         }
       }
+
+      if (!attached) {
+        // 최후 수단: 이미지를 data URI 로 본문에 직접 삽입한다.
+        // 커스텀 업로더에 의존하지 않으므로 사이트 구조가 바뀌어도 그림은 남는다.
+        // PNG를 base64로 바꾸면 본문이 지나치게 커지므로 경량 JPEG본이 있으면 그걸 쓴다
+        const jpgPath = path.join(__dirname, '..', 'out', 'post-image.jpg');
+        const useJpg = fs.existsSync(jpgPath);
+        const dataUrl = (useJpg ? 'data:image/jpeg;base64,' : 'data:image/png;base64,')
+          + fs.readFileSync(useJpg ? jpgPath : imgPath).toString('base64');
+        const kb = Math.round(dataUrl.length / 1024);
+        console.log(`업로더로 넣지 못해 본문에 직접 삽입합니다 (data URI ${kb}KB).`);
+        const ok = await page.evaluate(({ sel, url }) => {
+          const ed = document.querySelector(sel);
+          if (!ed) return false;
+          const p = document.createElement('p');
+          const img = document.createElement('img');
+          img.src = url;
+          img.style.maxWidth = '100%';
+          p.appendChild(img);
+          ed.appendChild(p);
+          // Summernote 는 입력 이벤트로 원본 textarea 를 동기화한다.
+          ed.dispatchEvent(new Event('input', { bubbles: true }));
+          const ta = document.querySelector('textarea[name="contents"], textarea[name="content"]');
+          if (ta) ta.value = ed.innerHTML;
+          return ed.querySelectorAll('img').length > 0;
+        }, { sel: EDITOR_SEL, url: dataUrl }).catch((e) => {
+          console.warn('본문 직접 삽입 실패:', e.message.split('\n')[0]);
+          return false;
+        });
+        if (ok) {
+          attached = true;
+          console.log('이미지 첨부 확인됨 (본문 data URI 직접 삽입)');
+        }
+      }
+
+      // 본문에 무엇이 들어갔는지 로그로 남긴다 (data URI 는 길어서 잘라낸다)
+      const preview = await page.evaluate((sel) => {
+        const ed = document.querySelector(sel);
+        if (!ed) return '(에디터 없음)';
+        return ed.innerHTML.replace(/data:image\/[a-z]+;base64,[^"']{40,}/g, 'data:image;base64,…').slice(0, 400);
+      }, EDITOR_SEL).catch(() => '(확인 실패)');
+      console.log('본문 에디터 내용:', preview);
 
       if (!attached) {
         await dumpPageStructure(page, '이미지 첨부 실패');
