@@ -2,11 +2,14 @@
 
 /**
  * report.json → 아파트너 게시용 글(out/post.md) 생성.
- * 구성: ① 우리 아파트 최근 거래·신고가 ② 인근 단지 신고가 ③ 오늘의 수원 신고가
  * 첫 줄 = 제목, 빈 줄 이후 = 본문.
+ *
+ * 본문 형식은 config.post.bodyMode 로 고른다.
+ *   image (기본) — 이미지 카드 한 장이 본문 역할. 글에는 요약 몇 줄만 남긴다.
+ *   full         — 우리 아파트·인근 단지·오늘의 신고가를 모두 텍스트로 나열한다.
  */
 
-const { PATHS, formatMan, loadJson, nowKST } = require('./lib');
+const { PATHS, formatMan, loadJson, nowKST, loadConfig } = require('./lib');
 const fs = require('fs');
 const path = require('path');
 
@@ -34,10 +37,46 @@ const fmtDate = (d) => {
   return `${y.slice(2)}.${Number(m)}.${Number(day)}`;
 };
 
+const cfg = loadConfig();
+const bodyMode = (cfg.post && cfg.post.bodyMode) || 'image';
+
 const lines = [];
 const ourName = report.ourApt ? report.ourApt.name : '우리 아파트';
 lines.push(`🔥 ${Number(mm)}/${Number(dd)}(${dow}) ${ourName} 신고가 브리핑`);
 lines.push('');
+
+if (bodyMode === 'image') {
+  // 이미지 한 장으로 전달하고, 글에는 핵심 수치만 짧게 남긴다
+  lines.push('아래 이미지에 이번 브리핑을 정리했습니다.');
+  lines.push('');
+  if (report.ourApt) {
+    const o = report.ourApt;
+    const recent = (o.recent || [])[0];
+    if (recent) {
+      lines.push(
+        `· 우리 단지 최근 거래: ${recent.areaType}형 ${formatMan(recent.amountMan)} ` +
+          `(${fmtArea(recent.area)}㎡/${recent.floor}층, ${fmtDate(recent.date)} 계약)`
+      );
+    }
+    for (const type of cfg.compareAreaTypes || []) {
+      const rec = (o.records || []).find((r) => r.areaType === type);
+      if (rec) lines.push(`· 우리 단지 ${type}형 역대 최고가: ${formatMan(rec.max)}`);
+    }
+  }
+  lines.push(`· 오늘의 수원 신고가: ${report.totalCount}건 (최근 ${report.rangeDays}일 내 계약)`);
+  lines.push('');
+  lines.push('※ 신고가 기준: 같은 단지·전용면적형(㎡ 정수 기준)별 역대 최고 거래가');
+  lines.push('※ 해제 신고된 거래는 제외. 신고 시점에 따라 결과가 추후 변경될 수 있습니다.');
+  lines.push('※ 자료: 국토교통부 실거래가 공개시스템');
+
+  fs.mkdirSync(path.dirname(PATHS.post), { recursive: true });
+  fs.writeFileSync(PATHS.post, lines.join('\n'), 'utf8');
+  console.log(`게시글 생성 완료 (이미지 중심) → ${PATHS.post}`);
+  console.log('----------------------------------------');
+  console.log(lines.join('\n'));
+  process.exit(0);
+}
+
 lines.push('국토교통부 실거래가 공개시스템 기준입니다.');
 lines.push('');
 

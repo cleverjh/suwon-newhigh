@@ -21,5 +21,9 @@
     59,
     84
   ],
-  "ourRecentTradeCount": 3
+  "ourRecentTradeCount": 3,
+  "post": {
+    "bodyMode": "image",
+    "bodyModeComment": "image = 이미지 카드 한 장 위주(본문은 안내 몇 줄만), full = 본문에 전체 목록을 텍스트로"
+  }
 }
