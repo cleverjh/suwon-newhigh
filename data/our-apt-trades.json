@@ -17270,6 +17270,13 @@
    "floor": 11
   },
   {
+   "date": "2026-07-23",
+   "amountMan": 83800,
+   "area": 84.911,
+   "areaType": 84,
+   "floor": 5
+  },
+  {
    "date": "2026-08-06",
    "amountMan": 89500,
    "area": 84.911,
@@ -17310,6 +17317,13 @@
    "area": 59.929,
    "areaType": 59,
    "floor": 17
+  },
+  {
+   "date": "2026-09-08",
+   "amountMan": 69500,
+   "area": 59.961,
+   "areaType": 59,
+   "floor": 29
   }
  ]
 }
