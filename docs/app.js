@@ -175,7 +175,7 @@ function renderToday(report) {
     if (!report.districts || total === 0) {
         const empty = el('div', 'empty');
         empty.appendChild(el('strong', null, '이번에 새로 나온 신고가가 없습니다'));
-        empty.appendChild(el('span', null, '다음 갱신(월·목 오전)을 기다려 주세요.'));
+        empty.appendChild(el('span', null, '다음 갱신(목요일 오전)을 기다려 주세요.'));
         content.appendChild(empty);
         return;
     }

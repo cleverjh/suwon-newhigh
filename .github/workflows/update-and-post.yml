@@ -2,8 +2,9 @@ name: 수원 신고가 갱신·아파트너 게시
 
 on:
   schedule:
-    # 매주 월·목 08:30 KST (= 일·수 23:30 UTC)
-    - cron: '30 23 * * 0,3'
+    # 매주 목 08:30 KST (= 수 23:30 UTC)
+    # GitHub 예약 실행은 1~2시간 늦게 시작되는 경우가 잦아 실제 게시는 10시 전후가 된다.
+    - cron: '30 23 * * 3'
   workflow_dispatch:
     inputs:
       backfill:
