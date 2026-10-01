@@ -1,8 +1,8 @@
 {
  "city": "수원",
- "generatedAt": "2026-09-24",
+ "generatedAt": "2026-10-01",
  "rangeDays": 14,
- "totalCount": 46,
+ "totalCount": 21,
  "ourApt": {
   "name": "수원SK스카이뷰",
   "umd": "정자동",
@@ -14,8 +14,8 @@
     "area": 59.961,
     "areaType": 59,
     "floor": 29,
-    "ourMaxMan": 76000,
-    "vsOurMaxMan": -6500,
+    "ourMaxMan": 77500,
+    "vsOurMaxMan": -8000,
     "neighbors": [
      {
       "apt": "화서역파크푸르지오",
@@ -25,8 +25,35 @@
      },
      {
       "apt": "북수원자이렉스비아",
-      "max": 82250,
-      "date": "2026-08-04",
+      "max": 82500,
+      "date": "2026-09-19",
+      "last": {
+       "man": 80000,
+       "date": "2026-09-23",
+       "floor": 14
+      }
+     }
+    ]
+   },
+   {
+    "date": "2026-09-03",
+    "amountMan": 77500,
+    "area": 59.961,
+    "areaType": 59,
+    "floor": 25,
+    "ourMaxMan": 77500,
+    "vsOurMaxMan": 0,
+    "neighbors": [
+     {
+      "apt": "화서역파크푸르지오",
+      "max": 127000,
+      "date": "2026-08-16",
+      "last": null
+     },
+     {
+      "apt": "북수원자이렉스비아",
+      "max": 82500,
+      "date": "2026-09-19",
       "last": {
        "man": 80000,
        "date": "2026-09-23",
@@ -41,8 +68,8 @@
     "area": 59.929,
     "areaType": 59,
     "floor": 17,
-    "ourMaxMan": 76000,
-    "vsOurMaxMan": -6000,
+    "ourMaxMan": 77500,
+    "vsOurMaxMan": -7500,
     "neighbors": [
      {
       "apt": "화서역파크푸르지오",
@@ -52,8 +79,8 @@
      },
      {
       "apt": "북수원자이렉스비아",
-      "max": 82250,
-      "date": "2026-08-04",
+      "max": 82500,
+      "date": "2026-09-19",
       "last": {
        "man": 80000,
        "date": "2026-09-23",
@@ -61,25 +88,15 @@
       }
      }
     ]
-   },
-   {
-    "date": "2026-08-29",
-    "amountMan": 96000,
-    "area": 97.791,
-    "areaType": 97,
-    "floor": 10,
-    "ourMaxMan": 105800,
-    "vsOurMaxMan": -9800,
-    "neighbors": []
    }
   ],
   "records": [
    {
     "areaType": 59,
-    "max": 76000,
-    "date": "2026-07-21",
-    "area": 59.952,
-    "floor": 31,
+    "max": 77500,
+    "date": "2026-09-03",
+    "area": 59.961,
+    "floor": 25,
     "last": {
      "man": 69500,
      "date": "2026-09-08",
@@ -148,9 +165,9 @@
      "area": 104.9868,
      "floor": 30,
      "last": {
-      "man": 168000,
-      "date": "2026-08-16",
-      "floor": 22
+      "man": 165500,
+      "date": "2026-09-21",
+      "floor": 5
      }
     }
    ]
@@ -191,10 +208,10 @@
    "records": [
     {
      "areaType": 59,
-     "max": 82250,
-     "date": "2026-08-04",
-     "area": 59.84,
-     "floor": 11,
+     "max": 82500,
+     "date": "2026-09-19",
+     "area": 59.87,
+     "floor": 10,
      "last": {
       "man": 80000,
       "date": "2026-09-23",
@@ -249,11 +266,7 @@
      "date": "2021-08-12",
      "area": 128.1836,
      "floor": 12,
-     "last": {
-      "man": 84000,
-      "date": "2026-07-18",
-      "floor": 11
-     }
+     "last": null
     },
     {
      "areaType": 157,
@@ -261,11 +274,7 @@
      "date": "2021-08-11",
      "area": 157.439,
      "floor": 14,
-     "last": {
-      "man": 86500,
-      "date": "2026-07-18",
-      "floor": 8
-     }
+     "last": null
     }
    ]
   },
@@ -295,11 +304,7 @@
      "date": "2021-11-05",
      "area": 140.72,
      "floor": 11,
-     "last": {
-      "man": 80000,
-      "date": "2026-07-03",
-      "floor": 4
-     }
+     "last": null
     }
    ]
   },
@@ -391,58 +396,49 @@
    "name": "장안구",
    "items": [
     {
-     "apt": "화서역파크푸르지오",
-     "umd": "정자동",
-     "amountMan": 170000,
-     "diffMan": 9500,
-     "area": 101.97,
-     "floor": 12,
-     "date": "2026-09-16"
+     "apt": "비단마을영풍",
+     "umd": "천천동",
+     "amountMan": 83900,
+     "diffMan": 6900,
+     "area": 122.8433,
+     "floor": 11,
+     "date": "2026-09-28"
     },
     {
      "apt": "화서역푸르지오더에듀포레",
      "umd": "천천동",
-     "amountMan": 81500,
-     "diffMan": 500,
+     "amountMan": 82700,
+     "diffMan": 1200,
      "area": 59.98,
-     "floor": 15,
-     "date": "2026-09-10"
+     "floor": 24,
+     "date": "2026-09-28"
     },
     {
-     "apt": "청솔마을한라",
+     "apt": "북수원자이렉스비아",
      "umd": "정자동",
-     "amountMan": 66300,
-     "diffMan": 1300,
-     "area": 59.985,
-     "floor": 17,
+     "amountMan": 82500,
+     "diffMan": 250,
+     "area": 59.87,
+     "floor": 10,
+     "date": "2026-09-19"
+    },
+    {
+     "apt": "수원장안힐스테이트",
+     "umd": "이목동",
+     "amountMan": 65000,
+     "diffMan": 500,
+     "area": 59.988,
+     "floor": 5,
      "date": "2026-09-18"
     },
     {
-     "apt": "백설마을현대코오롱아파트",
+     "apt": "보은맨션",
      "umd": "정자동",
-     "amountMan": 59500,
-     "diffMan": 1000,
-     "area": 59.79,
-     "floor": 15,
-     "date": "2026-09-14"
-    },
-    {
-     "apt": "목화",
-     "umd": "연무동",
-     "amountMan": 31000,
-     "diffMan": 13000,
-     "area": 79.6,
-     "floor": 9,
-     "date": "2026-09-17"
-    },
-    {
-     "apt": "동우",
-     "umd": "연무동",
-     "amountMan": 19500,
-     "diffMan": 2700,
-     "area": 79.38,
-     "floor": 6,
-     "date": "2026-09-10"
+     "amountMan": 24500,
+     "diffMan": 8500,
+     "area": 63.09,
+     "floor": 5,
+     "date": "2026-09-22"
     }
    ]
   },
@@ -450,112 +446,49 @@
    "name": "권선구",
    "items": [
     {
-     "apt": "호반 써밋 수원",
-     "umd": "금곡동",
-     "amountMan": 96000,
-     "diffMan": 3500,
-     "area": 84.9843,
-     "floor": 10,
-     "date": "2026-09-16"
-    },
-    {
      "apt": "수원하늘채더퍼스트1단지",
      "umd": "곡반정동",
-     "amountMan": 95000,
-     "diffMan": 5000,
-     "area": 84.96,
-     "floor": 12,
-     "date": "2026-09-15"
+     "amountMan": 89500,
+     "diffMan": 12300,
+     "area": 74.88,
+     "floor": 9,
+     "date": "2026-09-18"
     },
     {
-     "apt": "권선자이e편한세상",
-     "umd": "권선동",
-     "amountMan": 76000,
-     "diffMan": 1000,
-     "area": 84.9813,
-     "floor": 10,
-     "date": "2026-09-19"
+     "apt": "수원하늘채더퍼스트2단지",
+     "umd": "곡반정동",
+     "amountMan": 74000,
+     "diffMan": 2000,
+     "area": 59.96,
+     "floor": 8,
+     "date": "2026-09-17"
     },
     {
      "apt": "수원시청역SKVIEW",
      "umd": "권선동",
-     "amountMan": 75000,
-     "diffMan": 2500,
-     "area": 145.57,
-     "floor": 12,
-     "date": "2026-09-19"
-    },
-    {
-     "apt": "수원아이파크시티7단지",
-     "umd": "권선동",
-     "amountMan": 68300,
-     "diffMan": 300,
-     "area": 59.88,
-     "floor": 12,
-     "date": "2026-09-21"
-    },
-    {
-     "apt": "호매실더센트라고",
-     "umd": "금곡동",
-     "amountMan": 68000,
+     "amountMan": 73000,
      "diffMan": 500,
-     "area": 84.93,
-     "floor": 8,
-     "date": "2026-09-11"
+     "area": 84.88,
+     "floor": 14,
+     "date": "2026-09-28"
     },
     {
-     "apt": "삼환",
+     "apt": "강남",
      "umd": "구운동",
-     "amountMan": 64000,
-     "diffMan": 500,
-     "area": 84.9,
-     "floor": 7,
-     "date": "2026-09-18"
+     "amountMan": 54000,
+     "diffMan": 4000,
+     "area": 76.54,
+     "floor": 11,
+     "date": "2026-09-22"
     },
     {
-     "apt": "엘지빌리지4",
-     "umd": "금곡동",
-     "amountMan": 61500,
-     "diffMan": 3500,
-     "area": 99.88,
-     "floor": 10,
-     "date": "2026-09-15"
-    },
-    {
-     "apt": "삼환",
-     "umd": "구운동",
-     "amountMan": 50500,
-     "diffMan": 1500,
-     "area": 54.66,
-     "floor": 12,
-     "date": "2026-09-19"
-    },
-    {
-     "apt": "수원아이파크시티8단지",
+     "apt": "보성,유원",
      "umd": "권선동",
-     "amountMan": 49000,
-     "diffMan": 4700,
-     "area": 54.51,
-     "floor": 10,
-     "date": "2026-09-19"
-    },
-    {
-     "apt": "구운동성원상떼빌",
-     "umd": "구운동",
-     "amountMan": 49000,
-     "diffMan": 2500,
-     "area": 59.93,
-     "floor": 1,
-     "date": "2026-09-20"
-    },
-    {
-     "apt": "선경",
-     "umd": "구운동",
-     "amountMan": 43000,
-     "diffMan": 1000,
-     "area": 84.4,
+     "amountMan": 41500,
+     "diffMan": 800,
+     "area": 59.76,
      "floor": 5,
-     "date": "2026-09-17"
+     "date": "2026-09-28"
     }
    ]
   },
@@ -563,94 +496,13 @@
    "name": "팔달구",
    "items": [
     {
-     "apt": "매교역푸르지오SKVIEW",
-     "umd": "매교동",
-     "amountMan": 119700,
-     "diffMan": 700,
-     "area": 99.9,
-     "floor": 6,
-     "date": "2026-09-22"
-    },
-    {
-     "apt": "매교역푸르지오SKVIEW",
-     "umd": "매교동",
-     "amountMan": 119000,
-     "diffMan": 7700,
-     "area": 99.9,
-     "floor": 5,
-     "date": "2026-09-17"
-    },
-    {
-     "apt": "매교역푸르지오SKVIEW",
-     "umd": "매교동",
-     "amountMan": 105000,
-     "diffMan": 2000,
-     "area": 74.69,
-     "floor": 11,
-     "date": "2026-09-23"
-    },
-    {
-     "apt": "현대",
-     "umd": "우만동",
-     "amountMan": 103000,
-     "diffMan": 5000,
-     "area": 126.45,
-     "floor": 3,
-     "date": "2026-09-15"
-    },
-    {
-     "apt": "수원센트럴아이파크자이",
-     "umd": "인계동",
-     "amountMan": 102000,
-     "diffMan": 1000,
-     "area": 84.99,
-     "floor": 15,
-     "date": "2026-09-15"
-    },
-    {
-     "apt": "화서주공4단지",
-     "umd": "화서동",
-     "amountMan": 92800,
-     "diffMan": 800,
-     "area": 59.98,
-     "floor": 11,
-     "date": "2026-09-17"
-    },
-    {
-     "apt": "수원역푸르지오자이",
-     "umd": "고등동",
-     "amountMan": 87000,
-     "diffMan": 10000,
-     "area": 59.99,
-     "floor": 11,
-     "date": "2026-09-18"
-    },
-    {
      "apt": "힐스테이트푸르지오수원",
      "umd": "매교동",
-     "amountMan": 85000,
-     "diffMan": 200,
-     "area": 59.95,
-     "floor": 12,
-     "date": "2026-09-16"
-    },
-    {
-     "apt": "꽃뫼마을풍림",
-     "umd": "화서동",
-     "amountMan": 69000,
-     "diffMan": 1000,
-     "area": 59.96,
-     "floor": 8,
-     "date": "2026-09-19"
-    },
-    {
-     "apt": "풍림",
-     "umd": "우만동",
-     "amountMan": 49300,
-     "diffMan": 2300,
-     "area": 39.6,
-     "floor": 4,
-     "date": "2026-09-19"
+     "amountMan": 49500,
+     "diffMan": 800,
+     "area": 43.46,
+     "floor": 11,
+     "date": "2026-09-18"
     }
    ]
   },
@@ -658,166 +510,94 @@
    "name": "영통구",
    "items": [
     {
-     "apt": "자연앤힐스테이트",
-     "umd": "이의동",
-     "amountMan": 214000,
-     "diffMan": 2000,
-     "area": 84.37,
-     "floor": 7,
-     "date": "2026-09-21"
-    },
-    {
-     "apt": "SummitPlace광교",
-     "umd": "이의동",
-     "amountMan": 205000,
-     "diffMan": 5000,
-     "area": 116.705,
-     "floor": 17,
-     "date": "2026-09-17"
-    },
-    {
-     "apt": "자연앤자이1단지",
-     "umd": "이의동",
-     "amountMan": 203000,
-     "diffMan": 3000,
-     "area": 116.35,
-     "floor": 4,
-     "date": "2026-09-11"
-    },
-    {
-     "apt": "오드카운티",
-     "umd": "이의동",
-     "amountMan": 185000,
-     "diffMan": 18000,
-     "area": 121.9758,
-     "floor": 4,
-     "date": "2026-09-15"
-    },
-    {
-     "apt": "오드카운티",
-     "umd": "이의동",
-     "amountMan": 172000,
-     "diffMan": 2000,
-     "area": 123.4079,
-     "floor": 16,
-     "date": "2026-09-10"
+     "apt": "광교더리브",
+     "umd": "하동",
+     "amountMan": 158000,
+     "diffMan": 6000,
+     "area": 84.81,
+     "floor": 15,
+     "date": "2026-09-19"
     },
     {
      "apt": "힐스테이트영통",
      "umd": "망포동",
-     "amountMan": 154000,
-     "diffMan": 1500,
-     "area": 84.5303,
+     "amountMan": 126400,
+     "diffMan": 5400,
+     "area": 62.8033,
+     "floor": 11,
+     "date": "2026-09-19"
+    },
+    {
+     "apt": "광교호반베르디움",
+     "umd": "원천동",
+     "amountMan": 119500,
+     "diffMan": 500,
+     "area": 59.9306,
+     "floor": 4,
+     "date": "2026-09-18"
+    },
+    {
+     "apt": "영흥숲푸르지오파크비엔",
+     "umd": "원천동",
+     "amountMan": 112000,
+     "diffMan": 12000,
+     "area": 84.9957,
      "floor": 22,
-     "date": "2026-09-14"
+     "date": "2026-09-23"
     },
     {
-     "apt": "신나무실신원",
+     "apt": "영통에듀파크(331동~337동)",
      "umd": "영통동",
-     "amountMan": 110000,
-     "diffMan": 5000,
-     "area": 134.998,
-     "floor": 2,
-     "date": "2026-09-21"
-    },
-    {
-     "apt": "그대가센트럴파크",
-     "umd": "망포동",
-     "amountMan": 108000,
-     "diffMan": 3500,
-     "area": 144.9621,
-     "floor": 9,
-     "date": "2026-09-17"
-    },
-    {
-     "apt": "영통SKVIEW",
-     "umd": "망포동",
      "amountMan": 96500,
-     "diffMan": 8000,
-     "area": 58.9742,
+     "diffMan": 1500,
+     "area": 84.96,
+     "floor": 2,
+     "date": "2026-09-19"
+    },
+    {
+     "apt": "영통아이파크캐슬3단지",
+     "umd": "망포동",
+     "amountMan": 94000,
+     "diffMan": 3500,
+     "area": 59.92,
+     "floor": 5,
+     "date": "2026-09-18"
+    },
+    {
+     "apt": "신나무실동보",
+     "umd": "영통동",
+     "amountMan": 83500,
+     "diffMan": 6000,
+     "area": 84.9,
+     "floor": 19,
+     "date": "2026-09-17"
+    },
+    {
+     "apt": "e-편한세상",
+     "umd": "매탄동",
+     "amountMan": 75900,
+     "diffMan": 3400,
+     "area": 59.9677,
+     "floor": 14,
+     "date": "2026-09-22"
+    },
+    {
+     "apt": "영통자이",
+     "umd": "망포동",
+     "amountMan": 73000,
+     "diffMan": 2300,
+     "area": 59.9614,
      "floor": 22,
      "date": "2026-09-19"
     },
     {
-     "apt": "삼성",
-     "umd": "영통동",
-     "amountMan": 87000,
-     "diffMan": 6000,
-     "area": 84.93,
-     "floor": 10,
-     "date": "2026-09-17"
-    },
-    {
-     "apt": "e편한세상영통2차(1단지)",
+     "apt": "e편한세상영통2차(2단지)",
      "umd": "망포동",
-     "amountMan": 78000,
-     "diffMan": 6000,
-     "area": 74.5822,
-     "floor": 17,
+     "amountMan": 66300,
+     "diffMan": 3300,
+     "area": 59.9135,
+     "floor": 3,
      "date": "2026-09-18"
-    },
-    {
-     "apt": "매탄위브하늘채",
-     "umd": "매탄동",
-     "amountMan": 75700,
-     "diffMan": 200,
-     "area": 59.9845,
-     "floor": 23,
-     "date": "2026-09-14"
-    },
-    {
-     "apt": "매탄위브하늘채",
-     "umd": "매탄동",
-     "amountMan": 75500,
-     "diffMan": 1500,
-     "area": 59.9845,
-     "floor": 19,
-     "date": "2026-09-13"
-    },
-    {
-     "apt": "벽적골롯데",
-     "umd": "영통동",
-     "amountMan": 75000,
-     "diffMan": 7300,
-     "area": 59.96,
-     "floor": 12,
-     "date": "2026-09-16"
-    },
-    {
-     "apt": "벽적골9단지주공",
-     "umd": "영통동",
-     "amountMan": 74500,
-     "diffMan": 1500,
-     "area": 59.39,
-     "floor": 12,
-     "date": "2026-09-16"
-    },
-    {
-     "apt": "방죽마을영통뜨란채",
-     "umd": "망포동",
-     "amountMan": 72000,
-     "diffMan": 3000,
-     "area": 84.68,
-     "floor": 19,
-     "date": "2026-09-16"
-    },
-    {
-     "apt": "영통센트럴파크뷰",
-     "umd": "영통동",
-     "amountMan": 64000,
-     "diffMan": 4000,
-     "area": 59.99,
-     "floor": 17,
-     "date": "2026-09-18"
-    },
-    {
-     "apt": "황골마을한국",
-     "umd": "영통동",
-     "amountMan": 55000,
-     "diffMan": 800,
-     "area": 59.95,
-     "floor": 6,
-     "date": "2026-09-19"
     }
    ]
   }

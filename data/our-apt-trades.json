@@ -17312,6 +17312,13 @@
    "floor": 21
   },
   {
+   "date": "2026-08-27",
+   "amountMan": 94500,
+   "area": 97.791,
+   "areaType": 97,
+   "floor": 25
+  },
+  {
    "date": "2026-08-28",
    "amountMan": 87000,
    "area": 84.957,
@@ -17331,6 +17338,13 @@
    "area": 97.791,
    "areaType": 97,
    "floor": 10
+  },
+  {
+   "date": "2026-09-03",
+   "amountMan": 77500,
+   "area": 59.961,
+   "areaType": 59,
+   "floor": 25
   },
   {
    "date": "2026-09-08",
