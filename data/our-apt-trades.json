@@ -17326,6 +17326,13 @@
    "floor": 28
   },
   {
+   "date": "2026-08-28",
+   "amountMan": 90000,
+   "area": 84.893,
+   "areaType": 84,
+   "floor": 25
+  },
+  {
    "date": "2026-08-29",
    "amountMan": 70000,
    "area": 59.929,
@@ -17352,6 +17359,27 @@
    "area": 59.961,
    "areaType": 59,
    "floor": 29
+  },
+  {
+   "date": "2026-09-18",
+   "amountMan": 84700,
+   "area": 84.911,
+   "areaType": 84,
+   "floor": 2
+  },
+  {
+   "date": "2026-10-02",
+   "amountMan": 86000,
+   "area": 84.911,
+   "areaType": 84,
+   "floor": 29
+  },
+  {
+   "date": "2026-10-03",
+   "amountMan": 88500,
+   "area": 84.911,
+   "areaType": 84,
+   "floor": 9
   }
  ]
 }
