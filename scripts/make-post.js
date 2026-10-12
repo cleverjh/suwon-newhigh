@@ -40,14 +40,26 @@ const fmtDate = (d) => {
 const cfg = loadConfig();
 const bodyMode = (cfg.post && cfg.post.bodyMode) || 'image';
 
+// 운영 종료 안내처럼 그 회차에만 붙일 문구. config.post.notice / titleSuffix 로 넣는다.
+const notice = (cfg.post && cfg.post.notice) || [];
+const titleSuffix = (cfg.post && cfg.post.titleSuffix) || '';
+const leadLine = (cfg.post && cfg.post.leadLine) || '아래 이미지에 이번 브리핑을 정리했습니다.';
+
 const lines = [];
 const ourName = report.ourApt ? report.ourApt.name : '우리 아파트';
-lines.push(`🔥 ${Number(mm)}/${Number(dd)}(${dow}) ${ourName} 신고가 브리핑`);
+lines.push(`🔥 ${Number(mm)}/${Number(dd)}(${dow}) ${ourName} 신고가 브리핑${titleSuffix}`);
 lines.push('');
+
+if (notice.length > 0) {
+  lines.push(...notice);
+  lines.push('');
+  lines.push('────────────────────');
+  lines.push('');
+}
 
 if (bodyMode === 'image') {
   // 이미지 한 장으로 전달하고, 글에는 핵심 수치만 짧게 남긴다
-  lines.push('아래 이미지에 이번 브리핑을 정리했습니다.');
+  lines.push(leadLine);
   lines.push('');
   if (report.ourApt) {
     const o = report.ourApt;
